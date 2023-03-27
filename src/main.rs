@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::error::Error;
 
 use piet_programming_language::cc::CC;
+use piet_programming_language::command::Command;
 use piet_programming_language::dp::DP;
 use piet_programming_language::image::Image;
 
@@ -26,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if (!cur_codel.is_white()) {
             for i in 0..8 {
                 let next_index = img.get_next_codel_index(cur, &dp, &cc);
-                println!("  {:?}", next_index);
+                // println!("  {:?}", next_index);
                 if (next_index.is_none()) {
                     if (i % 2 == 0) {
                         cc = cc.flip();
@@ -50,7 +51,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     continue;
                 }
+
                 cur = next_index.unwrap();
+                if (next_codel.is_white()) {
+                    break;
+                }
+
+                let command = Command::new(cur_codel, next_codel);
+                println!("{:?}", command);
+
                 break;
             }
         } else {

@@ -119,4 +119,90 @@ impl Codel {
     pub fn is_white(&self) -> bool {
         self == &Codel::White
     }
+
+    fn get_hue(&self) -> usize {
+        match (self) {
+            Codel::LightRed | Codel::Red | Codel::DarkRed => 0,
+            Codel::LightYellow | Codel::Yellow | Codel::DarkYellow => 1,
+            Codel::LightGreen | Codel::Green | Codel::DarkGreen => 2,
+            Codel::LightCyan | Codel::Cyan | Codel::DarkCyan => 3,
+            Codel::LightBlue | Codel::Blue | Codel::DarkBlue => 4,
+            Codel::LightMagenta | Codel::Magenta | Codel::DarkMagenta => 5,
+            _ => unreachable!(),
+        }
+    }
+
+    fn get_lightness(&self) -> usize {
+        match (self) {
+            Codel::LightRed
+            | Codel::LightYellow
+            | Codel::LightGreen
+            | Codel::LightCyan
+            | Codel::LightBlue
+            | Codel::LightMagenta => 0,
+            Codel::Red
+            | Codel::Yellow
+            | Codel::Green
+            | Codel::Cyan
+            | Codel::Blue
+            | Codel::Magenta => 1,
+            Codel::DarkRed
+            | Codel::DarkYellow
+            | Codel::DarkGreen
+            | Codel::DarkCyan
+            | Codel::DarkBlue
+            | Codel::DarkMagenta => 2,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn get_hue_difference(from: &Codel, to: &Codel) -> usize {
+        let from = from.get_hue();
+        let to = to.get_hue();
+        if (to >= from) {
+            to - from
+        } else {
+            to + 6 - from
+        }
+    }
+
+    pub fn get_lightness_difference(from: &Codel, to: &Codel) -> usize {
+        let from = from.get_lightness();
+        let to = to.get_lightness();
+        if (to >= from) {
+            to - from
+        } else {
+            to + 3 - from
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    // #[ignore]
+    fn test01() {
+        assert_eq!(0, Codel::get_hue_difference(&Codel::Red, &Codel::LightRed));
+        assert_eq!(1, Codel::get_hue_difference(&Codel::Red, &Codel::Yellow));
+        assert_eq!(4, Codel::get_hue_difference(&Codel::Blue, &Codel::Green));
+    }
+
+    #[test]
+    // #[ignore]
+    fn test02() {
+        assert_eq!(
+            0,
+            Codel::get_lightness_difference(&Codel::LightRed, &Codel::LightYellow)
+        );
+        assert_eq!(
+            1,
+            Codel::get_lightness_difference(&Codel::LightRed, &Codel::Yellow)
+        );
+        assert_eq!(
+            2,
+            Codel::get_lightness_difference(&Codel::Red, &Codel::LightGreen)
+        );
+    }
 }
