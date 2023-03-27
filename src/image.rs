@@ -1,14 +1,18 @@
-use image::{self, io::Reader, DynamicImage};
 use std::{
+    collections::HashSet,
     error::Error,
     fmt::{self, Display},
+    rc::Rc,
 };
+
+use image::{self, io::Reader, DynamicImage};
+use itertools::Itertools;
 
 /*-------------------------------------*/
 
 /* Codel */
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Codel {
     LightRed,     //#FFC0C0
     LightYellow,  //#FFFFC0
@@ -138,10 +142,103 @@ impl Pixel {
 
 /*-------------------------------------*/
 
+/* Block */
+
+#[derive(Debug, Default, Clone)]
+struct Block {
+    num_codal: usize,
+
+    right_left: (usize, usize),
+    right_right: (usize, usize),
+    down_left: (usize, usize),
+    down_right: (usize, usize),
+    left_left: (usize, usize),
+    left_right: (usize, usize),
+    up_left: (usize, usize),
+    up_right: (usize, usize),
+}
+
+impl Block {
+    fn new(s: &HashSet<(usize, usize)>) -> Self {
+        let i_min = s.iter().min_by_key(|(i, _)| i).unwrap().0;
+        let i_max = s.iter().max_by_key(|(i, _)| i).unwrap().0;
+        let j_min = s.iter().min_by_key(|(_, j)| j).unwrap().1;
+        let j_max = s.iter().max_by_key(|(_, j)| j).unwrap().1;
+        Self {
+            num_codal: s.len(),
+            #[rustfmt::skip]
+            right_left: *s.iter().filter(|(_, j)| *j == j_max).sorted().next().unwrap(),
+            #[rustfmt::skip]
+            right_right: *s.iter().filter(|(_, j)| *j == j_max).sorted().last().unwrap(),
+            #[rustfmt::skip]
+            down_left: *s.iter().filter(|(i, _)| *i == i_max).sorted().last().unwrap(),
+            #[rustfmt::skip]
+            down_right: *s.iter().filter(|(i, _)| *i == i_max).sorted().next().unwrap(),
+            #[rustfmt::skip]
+            left_left: *s.iter().filter(|(_, j)| *j == j_min).sorted().last().unwrap(),
+            #[rustfmt::skip]
+            left_right: *s.iter().filter(|(_, j)| *j == j_min).sorted().next().unwrap(),
+            #[rustfmt::skip]
+            up_left: *s.iter().filter(|(i, _)| *i == i_min).sorted().next().unwrap(),
+            #[rustfmt::skip]
+            up_right: *s.iter().filter(|(i, _)| *i == i_min).sorted().last().unwrap(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //   ■   ■
+    // ■ ■ ■ ■ ■ ■
+    //   ■ ■ ■
+    // ■ ■ ■ ■ ■ ■
+    //   ■   ■
+    #[test]
+    fn test01() {
+        let l = vec![
+            (0, 1),
+            (0, 3),
+            (1, 0),
+            (1, 1),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (1, 5),
+            (2, 1),
+            (2, 2),
+            (2, 3),
+            (3, 0),
+            (3, 1),
+            (3, 2),
+            (3, 3),
+            (3, 4),
+            (3, 5),
+            (4, 1),
+            (4, 3),
+        ];
+        let s = HashSet::from_iter(l);
+        let block = Block::new(&s);
+        assert_eq!(block.num_codal, 19);
+        assert_eq!(block.right_left, (1, 5));
+        assert_eq!(block.right_right, (3, 5));
+        assert_eq!(block.down_left, (4, 3));
+        assert_eq!(block.down_right, (4, 1));
+        assert_eq!(block.left_left, (3, 0));
+        assert_eq!(block.left_right, (1, 0));
+        assert_eq!(block.up_left, (0, 1));
+        assert_eq!(block.up_right, (0, 3));
+    }
+}
+
+/*-------------------------------------*/
+
 /* Image */
 
 pub struct Image {
     m: Vec<Vec<Codel>>,
+    block_map: Vec<Vec<Rc<Block>>>,
 }
 
 impl Display for Image {
@@ -178,7 +275,8 @@ impl Image {
             _ => return Err("unsupported file format".into()),
         }
 
-        let codel_size = detect_codel_size(&pixels).ok_or("failed to detect the codel size")?;
+        let codel_size =
+            Self::detect_codel_size(&pixels).ok_or("failed to detect the codel size")?;
 
         let height = pixels.len() / codel_size;
         let width = pixels[0].len() / codel_size;
@@ -198,37 +296,103 @@ impl Image {
             }
         }
 
-        Ok(Self { m })
-    }
-}
+        let block_map = Self::create_block_map(&m);
 
-fn detect_codel_size(m: &Vec<Vec<Pixel>>) -> Option<usize> {
-    let height = m.len();
-    let width = m[0].len();
-    //tries all of the common divisors of `height` and `width` in descending order
-    'a: for codel_size in (1..=(height.min(width))).rev() {
-        if !((width % codel_size == 0) && (height % codel_size == 0)) {
-            continue;
-        }
-        let h = height / codel_size;
-        let w = width / codel_size;
-        for i in 0..h {
-            for j in 0..w {
-                let origin_x = j * codel_size;
-                let origin_y = i * codel_size;
-                let p = &m[origin_y][origin_x];
-                for x in 0..codel_size {
-                    for y in 0..codel_size {
-                        if (&m[origin_y + y][origin_x + x] != p) {
-                            continue 'a;
+        Ok(Self { m, block_map })
+    }
+
+    fn detect_codel_size(m: &Vec<Vec<Pixel>>) -> Option<usize> {
+        let height = m.len();
+        let width = m[0].len();
+        //tries all of the common divisors of `height` and `width` in descending order
+        'a: for codel_size in (1..=(height.min(width))).rev() {
+            if !((width % codel_size == 0) && (height % codel_size == 0)) {
+                continue;
+            }
+            let h = height / codel_size;
+            let w = width / codel_size;
+            for i in 0..h {
+                for j in 0..w {
+                    let origin_x = j * codel_size;
+                    let origin_y = i * codel_size;
+                    let p = &m[origin_y][origin_x];
+                    for x in 0..codel_size {
+                        for y in 0..codel_size {
+                            if (&m[origin_y + y][origin_x + x] != p) {
+                                continue 'a;
+                            }
                         }
                     }
                 }
             }
+            return Some(codel_size);
         }
-        return Some(codel_size);
+        None
     }
-    None
+
+    fn create_block_map(m: &Vec<Vec<Codel>>) -> Vec<Vec<Rc<Block>>> {
+        let mut connected_components = vec![];
+        let mut visited = HashSet::new();
+        for i in 0..m.len() {
+            for j in 0..m[0].len() {
+                if (visited.contains(&(i, j))) {
+                    continue;
+                }
+                let mut visited_local = HashSet::new();
+                Self::dfs((i, j), &m[i][j], m, &mut visited_local);
+                visited_local.iter().for_each(|e| {
+                    visited.insert(*e);
+                });
+                connected_components.push(visited_local);
+            }
+        }
+
+        let mut block_map = vec![vec![Rc::new(Block::default()); m[0].len()]; m.len()];
+        connected_components.iter().for_each(|s| {
+            let block = Rc::new(Block::new(s));
+            s.iter().for_each(|(i, j)| {
+                block_map[*i][*j] = block.clone();
+            });
+        });
+
+        block_map
+    }
+
+    fn four_adjacents((i, j): (usize, usize), height: usize, width: usize) -> Vec<(usize, usize)> {
+        let mut ret = vec![];
+        if (i != 0) {
+            ret.push((i - 1, j));
+        }
+        if (i != height - 1) {
+            ret.push((i + 1, j));
+        }
+        if (j != 0) {
+            ret.push((i, j - 1));
+        }
+        if (j != width - 1) {
+            ret.push((i, j + 1));
+        }
+        ret
+    }
+
+    fn dfs(
+        cur: (usize, usize),
+        color: &Codel,
+        m: &Vec<Vec<Codel>>,
+        visited: &mut HashSet<(usize, usize)>,
+    ) {
+        visited.insert(cur);
+        let height = m.len();
+        let width = m[0].len();
+        let adjacents = Self::four_adjacents(cur, height, width)
+            .into_iter()
+            .filter(|e| !visited.contains(e))
+            .filter(|(i, j)| &m[*i][*j] == color)
+            .collect_vec();
+        for &adj in &adjacents {
+            Self::dfs(adj, color, m, visited);
+        }
+    }
 }
 
 /*-------------------------------------*/
