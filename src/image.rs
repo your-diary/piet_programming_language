@@ -63,7 +63,7 @@ impl Display for Codel {
             Codel::Black => (0, 0, 0),
         };
         //by the way, `38;2` can be used to change the foreground color
-        write!(f, "\u{001B}[48;2;{};{};{}m{}\u{001B}[0m", r, g, b, "　")
+        write!(f, "\u{001B}[48;2;{};{};{}m　\u{001B}[0m", r, g, b)
     }
 }
 
@@ -198,7 +198,7 @@ impl Image {
             }
         }
 
-        Ok(Self { m: m })
+        Ok(Self { m })
     }
 }
 
