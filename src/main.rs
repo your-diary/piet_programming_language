@@ -17,6 +17,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut dp = DP::Right;
     let mut cc = CC::Left;
 
+    let mut stack: Vec<isize> = vec![];
+
     loop {
         println!("{:?}", cur);
         let cur_codel = img.get_codel(cur);
