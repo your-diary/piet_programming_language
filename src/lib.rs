@@ -23,7 +23,7 @@ fn debug_print(is_verbose_mode: bool, s: &str) {
 }
 
 pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
-    let img = Image::new(&args.image_file)?;
+    let img = Image::new(&args.image_file, args.codel_size)?;
     debug_print(args.verbose, &format!("{}", img));
 
     let mut ip = Interpreter::new();

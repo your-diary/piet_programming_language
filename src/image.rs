@@ -69,7 +69,7 @@ impl Display for Image {
 }
 
 impl Image {
-    pub fn new(file: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(file: &str, codel_size: Option<usize>) -> Result<Self, Box<dyn Error>> {
         let mut pixels = vec![];
         match Reader::open(file)?.decode()? {
             DynamicImage::ImageRgb8(img) => {
@@ -103,8 +103,14 @@ impl Image {
             _ => return Err("unsupported file format".into()),
         }
 
-        let codel_size =
-            Self::detect_codel_size(&pixels).ok_or("failed to detect the codel size")?;
+        let codel_size = if let Some(codel_size) = codel_size {
+            if (!Self::check_if_codel_size_is_valid(&pixels, codel_size)) {
+                return Err("incorrect codel size is specified".into());
+            }
+            codel_size
+        } else {
+            Self::detect_codel_size(&pixels).ok_or("failed to detect the codel size")?
+        };
 
         let height = pixels.len() / codel_size;
         let width = pixels[0].len() / codel_size;
@@ -137,31 +143,39 @@ impl Image {
         })
     }
 
-    fn detect_codel_size(m: &Vec<Vec<Pixel>>) -> Option<usize> {
+    fn check_if_codel_size_is_valid(m: &Vec<Vec<Pixel>>, codel_size: usize) -> bool {
         let height = m.len();
         let width = m[0].len();
-        //tries all of the common divisors of `height` and `width` in descending order
-        'a: for codel_size in (1..=(height.min(width))).rev() {
-            if !((width % codel_size == 0) && (height % codel_size == 0)) {
-                continue;
-            }
-            let h = height / codel_size;
-            let w = width / codel_size;
-            for i in 0..h {
-                for j in 0..w {
-                    let origin_x = j * codel_size;
-                    let origin_y = i * codel_size;
-                    let p = &m[origin_y][origin_x];
-                    for x in 0..codel_size {
-                        for y in 0..codel_size {
-                            if (&m[origin_y + y][origin_x + x] != p) {
-                                continue 'a;
-                            }
+        let h = height / codel_size;
+        let w = width / codel_size;
+        for i in 0..h {
+            for j in 0..w {
+                let origin_x = j * codel_size;
+                let origin_y = i * codel_size;
+                let p = &m[origin_y][origin_x];
+                for x in 0..codel_size {
+                    for y in 0..codel_size {
+                        if (&m[origin_y + y][origin_x + x] != p) {
+                            return false;
                         }
                     }
                 }
             }
-            return Some(codel_size);
+        }
+        true
+    }
+
+    fn detect_codel_size(m: &Vec<Vec<Pixel>>) -> Option<usize> {
+        let height = m.len();
+        let width = m[0].len();
+        //tries all of the common divisors of `height` and `width` in descending order
+        for codel_size in (1..=(height.min(width))).rev() {
+            if !((width % codel_size == 0) && (height % codel_size == 0)) {
+                continue;
+            }
+            if (Self::check_if_codel_size_is_valid(m, codel_size)) {
+                return Some(codel_size);
+            }
         }
         None
     }

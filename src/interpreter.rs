@@ -46,6 +46,7 @@ impl Interpreter {
 
     pub fn output(&mut self, s: &str) {
         io::stdout().write_all(s.as_bytes()).unwrap();
+        io::stdout().flush().unwrap();
 
         #[cfg(test)]
         {
