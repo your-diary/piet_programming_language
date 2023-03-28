@@ -12,19 +12,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     let img = Image::new(&filename)?;
-    println!("{}", img);
+    eprintln!("{}", img);
 
     let mut ip = Interpreter::new();
 
     loop {
-        println!("{:?}", ip.cur);
+        eprintln!("{:?}", ip.cur);
         let cur_codel = img.get_codel(ip.cur);
         assert!(!cur_codel.is_black());
         if (!cur_codel.is_white()) {
             let iter_max = 7; //changes `dp` or `cc` at most 7 times
             for i in 0..=iter_max {
                 let next_index = img.get_next_codel_index(ip.cur, &ip.dp, &ip.cc);
-                // println!("  {:?}", next_index);
+                // eprintln!("  {:?}", next_index);
                 if (next_index.is_none()) {
                     if (i % 2 == 0) {
                         ip.cc = ip.cc.flip();
@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
 
                 let command = Command::new(cur_codel, next_codel);
-                println!("{:?}", command);
+                eprintln!("    {:?}", command);
                 let value = img.get_number(ip.cur);
                 command.apply(&mut ip, value)?;
 
