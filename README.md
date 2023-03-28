@@ -28,7 +28,7 @@ $ ./target/release/piet_programming_language <image file>
 
 [The official specification](https://www.dangermouse.net/esoteric/piet.html) doesn't define Piet Programming Language very strictly: some behaviors are *implementation-defined*.
 
-In this section, how such behaviors are implemented is explained.
+In this section, we explain how such behaviors are implemented.
 
 ### 3.1 Colors
 
@@ -76,15 +76,15 @@ Zero-division immediately terminates your program.
 
 As noted earlier, there is no explicit *implementation-dependent maximum stack depth*.
 
-Practically, when the depth (i.e. the second top entry of a stack) is large than `len(stack) - 2`, the command is simply ignored according to
+Practically, when the depth (i.e. the second top entry of a stack) is larger than `len(stack) - 2` (i.e. the whole stack minus the two popped entries), the command is simply ignored according to
 
 > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
 
-By the way, the complexity of `roll` command only depends on the depth (i.e. `O(depth)`). Even if the number of rolls (i.e. the ) is large, the command runs quickly. The same applies to `pointer` command and `switch` command, both of which take `O(1)`.
+By the way, the complexity of `roll` command only depends on the depth (i.e. `O(depth)`). Even if the number of rolls (i.e. the top entry of a stack) is large, the command runs quickly. The similar applies to `pointer` command and `switch` command, both of which take `O(1)`.
 
 ## 4. Known Bugs
 
-Currently, only ASCII characters are supported though Piet Programming Language shall support Unicode characters as stated in [the spec](https://www.dangermouse.net/esoteric/piet.html):
+Currently, only ASCII characters are supported though Piet Programming Language shall support Unicode characters as stated in the spec:
 
 > *Data values exist only as integers, though they may be read in or printed as Unicode character values with appropriate commands.*
 
@@ -95,5 +95,7 @@ Currently, only ASCII characters are supported though Piet Programming Language 
 - [*Language Specification*](https://www.dangermouse.net/esoteric/piet.html)
 
 - [*trace output*](http://www.bertnase.de/npiet/hi-npiet-trace.html)
+
+- [./readme_assets/spec.png]
 
 <!-- vim: set spell: -->
