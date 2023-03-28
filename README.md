@@ -40,7 +40,7 @@ Our implementation marks any unknown color as an error, immediately terminating 
 
 > *Individual pixels of colour are significant in the language, so it is common for programs to be enlarged for viewing so that the details are easily visible. In such enlarged programs, the term "codel" is used to mean a block of colour equivalent to a single pixel of code, to avoid confusion with the actual pixels of the enlarged graphic, of which many may make up one codel.*
 
-The size of codel is automatically detected.
+The codel size is automatically detected or can be specified via `--codel-size` option. Note that, generally speaking, the codel size cannot be uniquely determined. If a positive integer `n` is valid as a codel size, then any divisors of `n` are also valid. It is even known there is a program whose behavior changes as the codel size changes (see [*Multi-Codel Size*](https://www.dangermouse.net/esoteric/piet/samples.html)). When automatic detection is performed, the maximum valid `n` is adopted.
 
 ### 3.3 Characters
 
@@ -90,7 +90,19 @@ Currently, only ASCII characters are supported though Piet Programming Language 
 
 <!-- https://stackoverflow.com/questions/5012803/test-if-char-string-contains-multibyte-characters/60798330#60798330 -->
 
-## 5. References
+## 5. Tests
+
+### 5.1 Unit Tests
+
+Many unit tests are written.
+
+### 5.2 Integration Tests
+
+As integration tests, almost all of the samples exhibited in [*Piet Program Gallery*](https://www.dangermouse.net/esoteric/piet/samples.html) are tested.
+
+Some tests are set `#[ignore]` (i.e. skipped) because they fail. As far as we investigated, we suspect the reason is not because our implementation is wrong but because some samples are not standard-compliant (anymore). Especially, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec. Our implementation conforms to [*the spec as of 2023/03/29*](https://web.archive.org/web/20230327044126/https://www.dangermouse.net/esoteric/piet.html).
+
+## 6. References
 
 - [*Language Specification*](https://www.dangermouse.net/esoteric/piet.html)
 
