@@ -220,6 +220,10 @@ impl Image {
         &self.m[i][j]
     }
 
+    pub fn get_number(&self, (i, j): (usize, usize)) -> isize {
+        self.block_map[i][j].num_codel
+    }
+
     pub fn get_next_codel_index(
         &self,
         (i, j): (usize, usize),

@@ -7,7 +7,7 @@ use super::dp::DP;
 
 #[derive(Debug, Default, Clone)]
 pub struct Block {
-    num_codal: usize,
+    pub num_codel: isize,
 
     right_left: (usize, usize),
     right_right: (usize, usize),
@@ -26,7 +26,7 @@ impl Block {
         let j_min = s.iter().min_by_key(|(_, j)| j).unwrap().1;
         let j_max = s.iter().max_by_key(|(_, j)| j).unwrap().1;
         Self {
-            num_codal: s.len(),
+            num_codel: s.len() as isize,
             #[rustfmt::skip]
             right_left: *s.iter().filter(|(_, j)| *j == j_max).sorted().next().unwrap(),
             #[rustfmt::skip]
@@ -94,7 +94,7 @@ mod tests {
         ];
         let s = HashSet::from_iter(l);
         let block = Block::new(&s);
-        assert_eq!(block.num_codal, 19);
+        assert_eq!(block.num_codel, 19);
         assert_eq!(block.right_left, (1, 5));
         assert_eq!(block.right_right, (3, 5));
         assert_eq!(block.down_left, (4, 3));
