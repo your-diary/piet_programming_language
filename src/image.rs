@@ -86,6 +86,20 @@ impl Image {
                     }
                 }
             }
+            DynamicImage::ImageRgba8(img) => {
+                let height = img.height();
+                let width = img.width();
+                for i in 0..height {
+                    pixels.push(vec![]);
+                    for j in 0..width {
+                        let pixel = img.get_pixel(j, i);
+                        pixels
+                            .last_mut()
+                            .unwrap()
+                            .push(Pixel::new(pixel[0], pixel[1], pixel[2]));
+                    }
+                }
+            }
             _ => return Err("unsupported file format".into()),
         }
 
