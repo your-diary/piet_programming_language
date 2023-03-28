@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::error::Error;
 
 use num::Integer;
@@ -152,9 +153,36 @@ impl Command {
             }
             Command::Roll => {
                 if (stack.len() >= 2) {
-                    let num_roll = stack.pop().unwrap();
-                    let depth = stack.pop().unwrap();
-                    todo!();
+                    let num_roll = stack[stack.len() - 1];
+                    let depth = stack[stack.len() - 2];
+                    //if operation cannoe be done
+                    if ((depth < 0) || (stack.len() - 2 < depth as usize)) {
+                        return Ok(());
+                    }
+                    for _ in 0..2 {
+                        stack.pop().unwrap();
+                    }
+                    //if operation can be done but virtually nothing happens
+                    if ((depth <= 1) || (num_roll == 0)) {
+                        return Ok(());
+                    }
+
+                    //rotates the indices `[0, 1, 2, ..., depth - 1]`
+                    let mut position = VecDeque::from_iter(0..(depth as usize));
+                    if (num_roll > 0) {
+                        position.rotate_right((num_roll % depth) as usize);
+                    } else {
+                        position.rotate_left((num_roll.abs() % depth) as usize);
+                    }
+
+                    //pops and re-pushes elements according to the rotated indices
+                    let mut backup = VecDeque::with_capacity(depth as usize);
+                    for _ in (0..depth).rev() {
+                        backup.push_front(stack.pop().unwrap());
+                    }
+                    for i in 0..(depth as usize) {
+                        stack.push(backup[position[i]]);
+                    }
                 }
             }
             Command::ReadNumber => {
@@ -475,9 +503,104 @@ mod tests {
         assert_eq!(vec![1, 1], ip.stack);
     }
 
+    //cases in which nothing happens
     #[test]
-    fn test_roll() {
-        //TODO
+    fn test_roll_01() {
+        let command = Command::Roll;
+
+        //negative depth
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 8, 7, 1, 2, 3, 4, -2, 5];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, -2, 5], ip.stack);
+
+        //zero depth
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 0, 5];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
+
+        //one depth
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 1, 5];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
+
+        //depth is too large
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 8, 5];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, 8, 5], ip.stack);
+
+        //zero number of rotations
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 4, 0];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
+    }
+
+    //positive number of rolls
+    #[test]
+    fn test_roll_02() {
+        let command = Command::Roll;
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, 1];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, 2];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, 3];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, 4];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
+
+        //expects the complexity is independent of `num_roll`
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, 4 * 10isize.pow(8) + 1];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
+    }
+
+    //negative number of rolls
+    #[test]
+    fn test_roll_03() {
+        let command = Command::Roll;
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, -1];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, -2];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, -3];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
+
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, -4];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
+
+        //expects the complexity is independent of `num_roll`
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9, 1, 2, 3, 4, 4, -4 * 10isize.pow(8) - 1];
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
     }
 
     #[test]
