@@ -57,7 +57,6 @@ mod tests {
     use super::*;
 
     #[test]
-    // #[ignore]
     fn test01() {
         assert_eq!(DP::Right.next(), DP::Down);
         assert_eq!(DP::Down.next(), DP::Left);
@@ -66,7 +65,6 @@ mod tests {
     }
 
     #[test]
-    // #[ignore]
     fn test02() {
         assert_eq!(DP::Right.rotate_by(0), DP::Right);
 
@@ -87,5 +85,13 @@ mod tests {
         assert_eq!(DP::Right.rotate_by(-6), DP::Left);
         assert_eq!(DP::Right.rotate_by(-7), DP::Down);
         assert_eq!(DP::Right.rotate_by(-8), DP::Right);
+    }
+
+    #[test]
+    fn test03() {
+        assert_eq!((0, 1), DP::Right.get_displacement());
+        assert_eq!((1, 0), DP::Down.get_displacement());
+        assert_eq!((0, -1), DP::Left.get_displacement());
+        assert_eq!((-1, 0), DP::Up.get_displacement());
     }
 }

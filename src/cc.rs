@@ -12,3 +12,14 @@ impl CC {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test01() {
+        assert_eq!(CC::Right, CC::Left.flip());
+        assert_eq!(CC::Left, CC::Right.flip());
+    }
+}
