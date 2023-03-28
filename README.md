@@ -96,6 +96,6 @@ Currently, only ASCII characters are supported though Piet Programming Language 
 
 - [*trace output*](http://www.bertnase.de/npiet/hi-npiet-trace.html)
 
-- [./readme_assets/spec.png]
+- [./readme_assets/spec.png](./readme_assets/spec.png)
 
 <!-- vim: set spell: -->
