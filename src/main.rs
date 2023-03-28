@@ -1,30 +1,38 @@
 use std::collections::HashSet;
 use std::error::Error;
 
+use piet_programming_language::args::Args;
 use piet_programming_language::command::Command;
 use piet_programming_language::image::Image;
 use piet_programming_language::interpreter::Interpreter;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let filename = format!(
-        "{}/Downloads/power2_big.png",
-        std::env::var("HOME").unwrap()
-    );
+use clap::Parser;
 
-    let img = Image::new(&filename)?;
-    eprintln!("{}", img);
+fn debug_print(is_verbose_mode: bool, s: &str) {
+    if (is_verbose_mode) {
+        eprintln!("{}", s);
+    }
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let args = Args::parse();
+    // println!("{:?}", args);
+    // std::process::exit(0);
+
+    let img = Image::new(&args.image_file)?;
+    debug_print(args.verbose, &format!("{}", img));
 
     let mut ip = Interpreter::new();
 
     loop {
-        eprintln!("{:?}", ip.cur);
+        debug_print(args.verbose, &format!("{:?}", ip.cur));
         let cur_codel = img.get_codel(ip.cur);
         assert!(!cur_codel.is_black());
         if (!cur_codel.is_white()) {
             let iter_max = 7; //changes `dp` or `cc` at most 7 times
             for i in 0..=iter_max {
                 let next_index = img.get_next_codel_index(ip.cur, &ip.dp, &ip.cc);
-                // eprintln!("  {:?}", next_index);
+                // debug_print(args.verbose, &format!("  {:?}", next_index));
                 if (next_index.is_none()) {
                     if (i % 2 == 0) {
                         ip.cc = ip.cc.flip();
@@ -55,7 +63,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
 
                 let command = Command::new(cur_codel, next_codel);
-                eprintln!("    {:?}", command);
+                debug_print(args.verbose, &format!("    {:?}", command));
                 let value = img.get_number(ip.cur);
                 command.apply(&mut ip, value)?;
 

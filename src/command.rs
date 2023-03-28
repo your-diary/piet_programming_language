@@ -202,13 +202,13 @@ impl Command {
             Command::WriteNumber => {
                 if (!stack.is_empty()) {
                     let x = stack.pop().unwrap();
-                    ip.output(&x.to_string());
+                    ip.output(&format!("{}\n", x));
                 }
             }
             Command::WriteChar => {
                 if (!stack.is_empty()) {
                     let x = stack.pop().unwrap();
-                    ip.output(&(x as u8 as char).to_string());
+                    ip.output(&format!("{}", x as u8 as char));
                 }
             }
         }
@@ -680,6 +680,6 @@ mod tests {
         ip.stack = vec![b'a' as isize];
         assert!(command.apply(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
-        assert_eq!("a\n".as_bytes(), &ip.output_buf);
+        assert_eq!("a".as_bytes(), &ip.output_buf);
     }
 }

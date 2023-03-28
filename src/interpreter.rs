@@ -46,12 +46,10 @@ impl Interpreter {
 
     pub fn output(&mut self, s: &str) {
         io::stdout().write_all(s.as_bytes()).unwrap();
-        io::stdout().write_all(&[b'\n']).unwrap();
 
         #[cfg(test)]
         {
             self.output_buf.write_all(s.as_bytes()).unwrap();
-            self.output_buf.write_all(&[b'\n']).unwrap();
         }
     }
 }
