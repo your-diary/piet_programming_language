@@ -19,6 +19,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     // println!("{:?}", args);
     // std::process::exit(0);
 
+    run(&args)
+}
+
+fn run(args: &Args) -> Result<(), Box<dyn Error>> {
     let img = Image::new(&args.image_file)?;
     debug_print(args.verbose, &format!("{}", img));
 
