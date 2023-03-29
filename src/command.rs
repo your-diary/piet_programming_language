@@ -207,8 +207,11 @@ impl Command {
             }
             Command::WriteChar => {
                 if (!stack.is_empty()) {
-                    let x = stack.pop().unwrap();
-                    ip.output(&format!("{}", x as u8 as char));
+                    let x = *stack.last().unwrap();
+                    if ((0 <= x) && (x <= char::MAX as isize)) {
+                        stack.pop().unwrap();
+                        ip.output(&format!("{}", char::from_u32(x as u32).unwrap()));
+                    }
                 }
             }
         }
@@ -218,6 +221,8 @@ impl Command {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+
     use super::super::cc::CC;
     use super::super::dp::DP;
     use super::*;
@@ -606,7 +611,10 @@ mod tests {
     #[test]
     fn test_read_number() {
         let command = Command::ReadNumber;
-        let mut ip = Interpreter::new_with_stdin(" -100 abc 100 ");
+        let mut ip = Interpreter::new_with_stdin(" -100 abc 🍄🌷 100 ");
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![-100], ip.stack);
 
         assert!(command.apply(&mut ip, 1).is_ok());
         assert_eq!(vec![-100], ip.stack);
@@ -628,22 +636,54 @@ mod tests {
     #[test]
     fn test_read_char() {
         let command = Command::ReadChar;
-        let mut ip = Interpreter::new_with_stdin(" -1 a ");
+        let mut ip = Interpreter::new_with_stdin(" -1 a 🌷🍄 a🍄 🍄a ");
+
+        let f = |v: Vec<char>| -> Vec<isize> { v.into_iter().map(|c| c as isize).collect_vec() };
 
         assert!(command.apply(&mut ip, 1).is_ok());
-        assert_eq!(vec![b'-' as isize], ip.stack);
+        assert_eq!(f(vec!['-']), ip.stack);
 
         assert!(command.apply(&mut ip, 1).is_ok());
-        assert_eq!(vec![b'-' as isize, b'1' as isize], ip.stack);
+        assert_eq!(f(vec!['-', '1']), ip.stack);
 
         assert!(command.apply(&mut ip, 1).is_ok());
-        assert_eq!(vec![b'-' as isize, b'1' as isize, b'a' as isize], ip.stack);
+        assert_eq!(f(vec!['-', '1', 'a']), ip.stack);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(f(vec!['-', '1', 'a', '🌷']), ip.stack);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄']), ip.stack);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a']), ip.stack);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄']), ip.stack);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(
+            f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄']),
+            ip.stack
+        );
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(
+            f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+            ip.stack
+        );
 
         for _ in 0..2 {
             assert!(command.apply(&mut ip, 1).is_ok());
-            assert_eq!(vec![b'-' as isize, b'1' as isize, b'a' as isize], ip.stack);
+            assert_eq!(
+                f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+                ip.stack
+            );
             assert!(command.apply(&mut ip, 1).is_ok());
-            assert_eq!(vec![b'-' as isize, b'1' as isize, b'a' as isize], ip.stack);
+            assert_eq!(
+                f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+                ip.stack
+            );
         }
     }
 
@@ -677,9 +717,23 @@ mod tests {
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
-        ip.stack = vec![b'a' as isize];
+        ip.stack = vec![char::MAX as isize + 1, -1, 'a' as isize, '🍄' as isize];
+
         assert!(command.apply(&mut ip, 1).is_ok());
-        assert!(ip.stack.is_empty());
-        assert_eq!("a".as_bytes(), &ip.output_buf);
+        assert_eq!(vec![char::MAX as isize + 1, -1, 'a' as isize], ip.stack);
+        assert_eq!("🍄".as_bytes(), &ip.output_buf);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
+        assert_eq!("🍄a".as_bytes(), &ip.output_buf);
+
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
+        assert_eq!("🍄a".as_bytes(), &ip.output_buf);
+
+        ip.stack.pop().unwrap();
+        assert!(command.apply(&mut ip, 1).is_ok());
+        assert_eq!(vec![char::MAX as isize + 1], ip.stack);
+        assert_eq!("🍄a".as_bytes(), &ip.output_buf);
     }
 }

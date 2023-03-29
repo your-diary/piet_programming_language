@@ -27,7 +27,9 @@ impl Stdin {
         }
     }
 
-    //reads next byte from `stdin` and returns it as `char` even if that is a whitespace
+    //reads next Unicode character from `stdin` and returns it as `char` even if that is a whitespace
+    //ref: |https://stackoverflow.com/questions/5012803/test-if-char-string-contains-multibyte-characters|
+    //ref: |https://stackoverflow.com/questions/75873135/how-to-convert-utf-8-hex-value-to-char-in-rust|
     fn next(&mut self) -> Option<char> {
         if (self.is_eof) {
             return None;
@@ -37,7 +39,28 @@ impl Stdin {
             self.is_eof = true;
             return None;
         }
-        Some(next.unwrap().unwrap() as char)
+
+        let c = next.unwrap().unwrap();
+
+        //if ASCII
+        if ((c >> 7) == 0b0) {
+            return Some(c as char);
+        }
+
+        //if Unicode
+        let mut l = vec![c];
+        let num_byte = if ((c >> 5) == 0b110) {
+            2
+        } else if ((c >> 4) == 0b1110) {
+            3
+        } else {
+            assert_eq!(0b11110, c >> 3);
+            4
+        };
+        for _ in 0..(num_byte - 1) {
+            l.push(self.stdin.as_mut().bytes().next().unwrap().unwrap());
+        }
+        Some(String::from_utf8(l).unwrap().chars().next().unwrap())
     }
 
     //reads next non-whitespace character
@@ -91,7 +114,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test01() {
+    fn test_ascii() {
         let mut stdin = Stdin::new_with_string(" he llo abc abc -100 15 a20   ");
         assert_eq!(Some('h'), stdin.read_char());
         assert_eq!(Some('e'), stdin.read_char());
@@ -104,6 +127,28 @@ mod tests {
         assert_eq!(Some(15), stdin.read_integer());
         assert_eq!(Some('a'), stdin.read_char());
         assert_eq!(Some(20), stdin.read_integer());
+        assert_eq!(None, stdin.read_char());
+        assert_eq!(None, stdin.read_word());
+    }
+
+    #[test]
+    fn test_unicode() {
+        let mut stdin = Stdin::new_with_string(" こん にちは 🌙🌱🌸   🌷🍄  -100 15 a20  あa aあ");
+        assert_eq!(Some('こ'), stdin.read_char());
+        assert_eq!(Some('ん'), stdin.read_char());
+        assert_eq!(Some('に'), stdin.read_char());
+        assert_eq!(Some('ち'), stdin.read_char());
+        assert_eq!(Some('は'), stdin.read_char());
+        assert_eq!(Some("🌙🌱🌸".to_string()), stdin.read_word());
+        assert_eq!(None, stdin.read_integer());
+        assert_eq!(Some(-100), stdin.read_integer());
+        assert_eq!(Some(15), stdin.read_integer());
+        assert_eq!(Some('a'), stdin.read_char());
+        assert_eq!(Some(20), stdin.read_integer());
+        assert_eq!(Some('あ'), stdin.read_char());
+        assert_eq!(Some('a'), stdin.read_char());
+        assert_eq!(Some('a'), stdin.read_char());
+        assert_eq!(Some('あ'), stdin.read_char());
         assert_eq!(None, stdin.read_char());
         assert_eq!(None, stdin.read_word());
     }
