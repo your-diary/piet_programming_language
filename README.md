@@ -42,35 +42,31 @@ Our implementation marks any unknown color as an error, immediately terminating 
 
 The codel size is automatically detected or can be specified via `--codel-size` option. Note that, generally speaking, the codel size cannot be uniquely determined. If a positive integer `n` is valid as a codel size, then any divisors of `n` are also valid. It is even known there is a program whose behavior changes as the codel size changes (see [*Multi-Codel Size*](https://www.dangermouse.net/esoteric/piet/samples.html)). When automatic detection is performed, the maximum valid `n` is adopted.
 
-### 3.3 Characters
-
-Unicode characters are not supported. See [*4. Known Bugs*](#4-known-bugs).
-
-### 3.4 Stack
+### 3.3 Stack
 
 > *The stack is notionally infinitely deep, but implementations may elect to provide a finite maximum stack size. If a finite stack overflows, it should be treated as a runtime error, and handling this will be implementation dependent.*
 
 Our implementation doesn't explicitly set the limit of a stack size. The actual size depends on your computer. What happens when a stack overflows is *undefined*.
 
-### 3.5 Integers
+### 3.4 Integers
 
 > *The maximum size of integers is notionally infinite, though implementations may implement a finite maximum integer size. An integer overflow is a runtime error, and handling this will be implementation dependent.*
 
 We use Rust's [`isize`](https://doc.rust-lang.org/std/primitive.isize.html) type to handle integers. The number of bits of an `isize` is normally `32` or `64`. What happens when an overflow occurs is *undefined* (we naively use Rust's builtin integer operations).
 
-### 3.6 `divide` command
+### 3.5 `divide` command
 
 > *If a divide by zero occurs, it is handled as an implementation-dependent error, though simply ignoring the command is recommended.*
 
 Zero-division immediately terminates your program.
 
-### 3.7 `mod` command
+### 3.6 `mod` command
 
 > *If the top value is zero, this is a divide by zero error, which is handled as an implementation-dependent error, though simply ignoring the command is recommended.*
 
 Zero-division immediately terminates your program.
 
-### 3.8 `roll` command
+### 3.7 `roll` command
 
 > *If a roll is greater than an implementation-dependent maximum stack depth, it is handled as an implementation-dependent error, though simply ignoring the command is recommended.*
 
@@ -82,27 +78,25 @@ Practically, when the depth (i.e. the second top entry of a stack) is larger tha
 
 By the way, the complexity of `roll` command only depends on the depth (i.e. `O(depth)`). Even if the number of rolls (i.e. the top entry of a stack) is large, the command runs quickly. The similar applies to `pointer` command and `switch` command, both of which take `O(1)`.
 
-## 4. Known Bugs
+### 3.8 `out(char)` command
 
-Currently, only ASCII characters are supported though Piet Programming Language shall support Unicode characters as stated in the spec:
+When the top entry of a stack exceeds the range `[0, char::MAX]` (i.e. when it isn't a valid Unicode character), the command is simply ignored according to
 
-> *Data values exist only as integers, though they may be read in or printed as Unicode character values with appropriate commands.*
+> *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
 
-<!-- https://stackoverflow.com/questions/5012803/test-if-char-string-contains-multibyte-characters/60798330#60798330 -->
+## 4. Tests
 
-## 5. Tests
-
-### 5.1 Unit Tests
+### 4.1 Unit Tests
 
 Many unit tests are written.
 
-### 5.2 Integration Tests
+### 4.2 Integration Tests
 
 As integration tests, almost all of the samples exhibited in [*Piet Program Gallery*](https://www.dangermouse.net/esoteric/piet/samples.html) are tested.
 
 Some tests are set `#[ignore]` (i.e. skipped) because they fail. As far as we investigated, we suspect the reason is not because our implementation is wrong but because some samples are not standard-compliant (anymore). Especially, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec. Our implementation conforms to [*the spec as of 2023/03/29*](https://web.archive.org/web/20230327044126/https://www.dangermouse.net/esoteric/piet.html).
 
-## 6. References
+## 5. References
 
 - [*Language Specification*](https://www.dangermouse.net/esoteric/piet.html)
 
