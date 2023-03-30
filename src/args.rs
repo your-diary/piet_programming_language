@@ -11,7 +11,7 @@ pub struct Args {
     #[arg(short, long)]
     pub codel_size: Option<usize>,
 
-    /// Enables debug output
+    /// Enables debug output (path trace etc.)
     #[arg(short, long)]
     pub verbose: bool,
 }

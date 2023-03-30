@@ -24,6 +24,25 @@ $ cargo build --release
 $ ./target/release/piet_programming_language <image file>
 ```
 
+### 2.3 Show Help
+
+```bash
+$ ./target/release/piet_programming_language --help
+
+Interpreter for Piet Programming Language
+
+Usage: piet_programming_language [OPTIONS] <IMAGE_FILE>
+
+Arguments:
+  <IMAGE_FILE>
+
+Options:
+  -c, --codel-size <CODEL_SIZE>  Specifies the codel size (default: auto detect)
+  -v, --verbose                  Enables debug output (path trace etc.)
+  -h, --help                     Print help
+  -V, --version                  Print version
+```
+
 ## 3. Specification
 
 [The official specification](https://www.dangermouse.net/esoteric/piet.html) doesn't define Piet Programming Language very strictly: some behaviors are *implementation-defined*.
