@@ -12,22 +12,32 @@ Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoter
 
 ## 2. Usage
 
-### 2.1 Build
+### 2.1 Installation
+
+#### From GitHub
 
 ```bash
-$ cargo build --release
+$ cargo install --git 'https://github.com/your-diary/piet_programming_language'
+```
+
+#### From Source
+
+```bash
+$ git clone 'https://github.com/your-diary/piet_programming_language'
+$ cd piet_programming_language/
+$ cargo install --path .
 ```
 
 ### 2.2 Run
 
 ```bash
-$ ./target/release/piet_programming_language <image file>
+$ piet_programming_language <image file>
 ```
 
 ### 2.3 Show Help
 
 ```bash
-$ ./target/release/piet_programming_language --help
+$ piet_programming_language --help
 
 Interpreter for Piet Programming Language
 
