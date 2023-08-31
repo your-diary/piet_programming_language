@@ -17,7 +17,7 @@ Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoter
 #### From GitHub
 
 ```bash
-$ cargo install --git 'https://github.com/your-diary/piet_programming_language'
+$ cargo install --locked --git 'https://github.com/your-diary/piet_programming_language'
 ```
 
 #### From Source
@@ -25,7 +25,7 @@ $ cargo install --git 'https://github.com/your-diary/piet_programming_language'
 ```bash
 $ git clone 'https://github.com/your-diary/piet_programming_language'
 $ cd piet_programming_language/
-$ cargo install --path .
+$ cargo install --locked --path .
 ```
 
 ### 2.2 Run
