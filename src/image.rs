@@ -5,7 +5,7 @@ use std::{
     rc::Rc,
 };
 
-use image::{self, io::Reader, DynamicImage};
+use image::{self, DynamicImage, ImageReader};
 use itertools::Itertools;
 
 use super::block::Block;
@@ -71,7 +71,7 @@ impl Display for Image {
 impl Image {
     pub fn new(file: &str, codel_size: Option<usize>) -> Result<Self, Box<dyn Error>> {
         let mut pixels = vec![];
-        match Reader::open(file)?.decode()? {
+        match ImageReader::open(file)?.decode()? {
             DynamicImage::ImageRgb8(img) => {
                 let height = img.height();
                 let width = img.width();
@@ -143,7 +143,7 @@ impl Image {
         })
     }
 
-    fn check_if_codel_size_is_valid(m: &Vec<Vec<Pixel>>, codel_size: usize) -> bool {
+    fn check_if_codel_size_is_valid(m: &[Vec<Pixel>], codel_size: usize) -> bool {
         let height = m.len();
         let width = m[0].len();
         let h = height / codel_size;
@@ -165,7 +165,7 @@ impl Image {
         true
     }
 
-    fn detect_codel_size(m: &Vec<Vec<Pixel>>) -> Option<usize> {
+    fn detect_codel_size(m: &[Vec<Pixel>]) -> Option<usize> {
         let height = m.len();
         let width = m[0].len();
         //tries all of the common divisors of `height` and `width` in descending order
