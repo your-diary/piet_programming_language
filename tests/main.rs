@@ -5,6 +5,7 @@
 // Especially, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec.
 
 mod integration_tests {
+    use std::fs;
     use std::io::{BufReader, BufWriter, Read, Write};
     use std::process::{Command, Stdio};
 
@@ -26,6 +27,9 @@ mod integration_tests {
 
     fn __run(image_file: &str, stdin: Option<&str>, codel_size: Option<usize>) -> CommandResult {
         let command = "./target/release/piet_programming_language";
+        if (!fs::exists(command).unwrap()) {
+            panic!("Binary not found. Run `cargo build --release` first.");
+        }
 
         let mut args = vec![
             format!("./tests/{}", image_file),
