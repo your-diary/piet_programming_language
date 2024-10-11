@@ -98,7 +98,7 @@ mod integration_tests {
         assert_eq!("Hello world!", res.stdout);
     }
 
-    //`ignore` because this results in an inifite loop.
+    //`ignore` because this results in an infinite loop.
     //The website says "Note: It has been reported that this program may be buggy; it goes into an infinite loop when traced with nPiet."
     #[test]
     #[ignore]
