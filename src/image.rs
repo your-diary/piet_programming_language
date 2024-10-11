@@ -188,8 +188,7 @@ impl Image {
                 if (visited.contains(&(i, j))) {
                     continue;
                 }
-                let mut visited_local = HashSet::new();
-                Self::dfs((i, j), &m[i][j], m, &mut visited_local);
+                let visited_local = Self::dfs((i, j), &m[i][j], m);
                 visited_local.iter().for_each(|e| {
                     visited.insert(*e);
                 });
@@ -225,23 +224,25 @@ impl Image {
         ret
     }
 
-    fn dfs(
-        cur: (usize, usize),
-        color: &Codel,
-        m: &Vec<Vec<Codel>>,
-        visited: &mut HashSet<(usize, usize)>,
-    ) {
-        visited.insert(cur);
+    fn dfs(cur: (usize, usize), color: &Codel, m: &[Vec<Codel>]) -> HashSet<(usize, usize)> {
+        let mut visited = HashSet::new();
+
         let height = m.len();
         let width = m[0].len();
-        let adjacents = Self::four_adjacents(cur, height, width)
-            .into_iter()
-            .filter(|e| !visited.contains(e))
-            .filter(|(i, j)| &m[*i][*j] == color)
-            .collect_vec();
-        for &adj in &adjacents {
-            Self::dfs(adj, color, m, visited);
+
+        let mut q = vec![cur];
+        while let Some(cur) = q.pop() {
+            visited.insert(cur);
+            Self::four_adjacents(cur, height, width)
+                .into_iter()
+                .filter(|e| !visited.contains(e))
+                .filter(|(i, j)| &m[*i][*j] == color)
+                .for_each(|e| {
+                    q.push(e);
+                });
         }
+
+        visited
     }
 
     pub fn get_codel(&self, (i, j): (usize, usize)) -> &Codel {
