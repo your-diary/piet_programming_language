@@ -27,7 +27,7 @@ mod integration_tests {
 
     fn __run(image_file: &str, stdin: Option<&str>, codel_size: Option<usize>) -> CommandResult {
         let command = "./target/release/piet_programming_language";
-        if (!fs::exists(command).unwrap()) {
+        if !fs::exists(command).unwrap() {
             panic!("Binary not found. Run `cargo build --release` first.");
         }
 
@@ -35,7 +35,7 @@ mod integration_tests {
             format!("./tests/{}", image_file),
             // "--verbose".to_string(),
         ];
-        if (codel_size.is_some()) {
+        if codel_size.is_some() {
             args.push("--codel-size".to_string());
             args.push(codel_size.unwrap().to_string());
         }
@@ -44,11 +44,11 @@ mod integration_tests {
         let mut child = Command::new(command);
         child.args(args);
         child.stdout(Stdio::piped()).stderr(Stdio::piped());
-        if (stdin.is_some()) {
+        if stdin.is_some() {
             child.stdin(Stdio::piped());
         }
 
-        let mut child = match (child.spawn()) {
+        let mut child = match child.spawn() {
             Ok(c) => c,
             Err(e) => {
                 return CommandResult {
@@ -59,7 +59,7 @@ mod integration_tests {
             }
         };
 
-        if (stdin.is_some()) {
+        if stdin.is_some() {
             let mut stdin_ = BufWriter::new(child.stdin.take().unwrap());
             stdin_.write(stdin.unwrap().as_bytes()).unwrap();
             drop(stdin_);
@@ -90,7 +90,7 @@ mod integration_tests {
     #[test]
     fn test01() {
         let res = run("./test_images/hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -104,7 +104,7 @@ mod integration_tests {
     #[ignore]
     fn test02() {
         let res = run("./test_images/fibonacci_numbers.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -117,7 +117,7 @@ mod integration_tests {
     #[ignore]
     fn test03() {
         let res = run("./test_images/towers_of_hanoi.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -130,7 +130,7 @@ mod integration_tests {
     #[ignore]
     fn test04() {
         let res = run("./test_images/fancy_hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -143,7 +143,7 @@ mod integration_tests {
     #[ignore]
     fn test05() {
         let res = run("./test_images/prime_number_test.png", Some("1"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -154,7 +154,7 @@ mod integration_tests {
     #[test]
     fn test06() {
         let res = run("./test_images/artistic_hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -167,7 +167,7 @@ mod integration_tests {
     #[ignore]
     fn test07() {
         let res = run("./test_images/artistic_hello_world_2.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -178,7 +178,7 @@ mod integration_tests {
     #[test]
     fn test08() {
         let res = run("./test_images/artistic_hello_world_3.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -189,7 +189,7 @@ mod integration_tests {
     #[test]
     fn test09() {
         let res = run("./test_images/artistic_hello_world_4.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -202,7 +202,7 @@ mod integration_tests {
     #[ignore]
     fn test10() {
         let res = run("./test_images/piet.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -213,7 +213,7 @@ mod integration_tests {
     #[test]
     fn test11() {
         let res = run("./test_images/alpha.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -226,7 +226,7 @@ mod integration_tests {
     #[ignore]
     fn test12() {
         let res = run("./test_images/prime_number_generator.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -239,7 +239,7 @@ mod integration_tests {
     #[ignore]
     fn test13() {
         let res = run("./test_images/adder.png", Some("3 5"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -250,7 +250,7 @@ mod integration_tests {
     #[test]
     fn test14() {
         let res = run("./test_images/pi.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -263,7 +263,7 @@ mod integration_tests {
     #[ignore]
     fn test15() {
         let res = run("./test_images/euclid_algorithm.png", Some("10 4"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -271,7 +271,7 @@ mod integration_tests {
         assert_eq!("2\n", res.stdout);
 
         let res = run("./test_images/euclid_algorithm.png", Some("17 19"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -284,7 +284,7 @@ mod integration_tests {
     #[ignore]
     fn test16() {
         let res = run("./test_images/japh.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -295,7 +295,7 @@ mod integration_tests {
     #[test]
     fn test17() {
         let res = run("./test_images/power_function.png", Some("3 0"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -303,7 +303,7 @@ mod integration_tests {
         assert_eq!("1\n", res.stdout);
 
         let res = run("./test_images/power_function.png", Some("3 4"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -316,7 +316,7 @@ mod integration_tests {
     #[ignore]
     fn test18() {
         let res = run("./test_images/factorials.png", Some("0"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -324,7 +324,7 @@ mod integration_tests {
         assert_eq!("1\n", res.stdout);
 
         let res = run("./test_images/power_function.png", Some("3"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -337,7 +337,7 @@ mod integration_tests {
     #[ignore]
     fn test19() {
         let res = run("./test_images/99_bottles_of_beer.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -348,7 +348,7 @@ mod integration_tests {
     #[test]
     fn test20() {
         let res = run("./test_images/mondrian_hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -361,7 +361,7 @@ mod integration_tests {
     #[ignore]
     fn test21() {
         let res = run("./test_images/another_prime_tester.png", Some("0"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -369,7 +369,7 @@ mod integration_tests {
         assert_eq!("0\nisnotprime", res.stdout);
 
         let res = run("./test_images/another_prime_tester.png", Some("1"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -377,7 +377,7 @@ mod integration_tests {
         assert_eq!("1\nisnotprime", res.stdout);
 
         let res = run("./test_images/another_prime_tester.png", Some("2"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -390,7 +390,7 @@ mod integration_tests {
     #[ignore]
     fn test22() {
         let res = run("./test_images/non_pastel_hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -401,7 +401,7 @@ mod integration_tests {
     #[test]
     fn test23() {
         let res = run("./test_images/world_hello_world.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -415,7 +415,7 @@ mod integration_tests {
             "./test_images/day_of_week_calculator.png",
             Some("2023 3 29"),
         );
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -428,7 +428,7 @@ mod integration_tests {
     #[ignore]
     fn test25() {
         let res = run("./test_images/assembled_piet_code.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -442,7 +442,7 @@ mod integration_tests {
             "./test_images/brainfuck_interpreter.gif",
             Some(",+>,+>,+>,+.<.<.<.|sdhO"),
         );
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         assert!(res.success());
@@ -455,7 +455,7 @@ mod integration_tests {
     #[ignore]
     fn test27() {
         let res = run("./test_images/cowsay.png", Some("hello world"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -469,7 +469,7 @@ mod integration_tests {
     #[ignore]
     fn test28() {
         let res = run("./test_images/gnome_sort.png", Some("3 1 2 2"));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -481,7 +481,7 @@ mod integration_tests {
     #[test]
     fn test29() {
         let res = run("./test_images/tetris.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -493,7 +493,7 @@ mod integration_tests {
     #[test]
     fn test30() {
         let res = run("./test_images/multi_codel_size.gif", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -502,7 +502,7 @@ mod integration_tests {
         assert_eq!("Piet\n", res.stdout);
 
         let res = __run("./test_images/multi_codel_size.gif", None, Some(4));
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -516,7 +516,7 @@ mod integration_tests {
     #[ignore]
     fn test31() {
         let res = run("./test_images/game_of_life.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -528,7 +528,7 @@ mod integration_tests {
     #[test]
     fn test32() {
         let res = run("./test_images/valentine_card.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -542,7 +542,7 @@ mod integration_tests {
     #[ignore]
     fn test33() {
         let res = run("./test_images/quines_1.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -556,7 +556,7 @@ mod integration_tests {
     #[ignore]
     fn test34() {
         let res = run("./test_images/quines_2.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -570,7 +570,7 @@ mod integration_tests {
     #[ignore]
     fn test35() {
         let res = run("./test_images/rock_paper_scissors.png", None);
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);
@@ -587,7 +587,7 @@ mod integration_tests {
             "./test_images/more_piet_wall_art_in_cyan_magenta_and_blue.png",
             None,
         );
-        if (!res.success()) {
+        if !res.success() {
             println!("{}", res.stderr);
         }
         println!("{}", res.stdout);

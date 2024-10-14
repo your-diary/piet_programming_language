@@ -31,7 +31,7 @@ pub enum Codel {
 
 impl Display for Codel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (r, g, b) = match (self) {
+        let (r, g, b) = match self {
             Codel::LightRed => (255, 192, 192),
             Codel::LightYellow => (255, 255, 192),
             Codel::LightGreen => (192, 255, 192),
@@ -63,7 +63,7 @@ impl Display for Codel {
 
 impl Codel {
     pub fn new(p: &Pixel) -> Option<Self> {
-        match (p) {
+        match p {
             #[rustfmt::skip]
             Pixel { r: 255, g: 192, b: 192 } => Some(Codel::LightRed),
             #[rustfmt::skip]
@@ -121,7 +121,7 @@ impl Codel {
     }
 
     fn get_hue(&self) -> usize {
-        match (self) {
+        match self {
             Codel::LightRed | Codel::Red | Codel::DarkRed => 0,
             Codel::LightYellow | Codel::Yellow | Codel::DarkYellow => 1,
             Codel::LightGreen | Codel::Green | Codel::DarkGreen => 2,
@@ -133,7 +133,7 @@ impl Codel {
     }
 
     fn get_lightness(&self) -> usize {
-        match (self) {
+        match self {
             Codel::LightRed
             | Codel::LightYellow
             | Codel::LightGreen
@@ -159,7 +159,7 @@ impl Codel {
     pub fn get_hue_difference(from: &Codel, to: &Codel) -> usize {
         let from = from.get_hue();
         let to = to.get_hue();
-        if (to >= from) {
+        if to >= from {
             to - from
         } else {
             to + 6 - from
@@ -169,7 +169,7 @@ impl Codel {
     pub fn get_lightness_difference(from: &Codel, to: &Codel) -> usize {
         let from = from.get_lightness();
         let to = to.get_lightness();
-        if (to >= from) {
+        if to >= from {
             to - from
         } else {
             to + 3 - from

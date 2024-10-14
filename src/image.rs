@@ -48,7 +48,7 @@ impl Display for Image {
             (0..self.width)
                 .map(|e| format!(
                     "{:2}",
-                    if (e % 10 == 0) {
+                    if e % 10 == 0 {
                         (e / 10).to_string()
                     } else {
                         " ".to_string()
@@ -104,7 +104,7 @@ impl Image {
         }
 
         let codel_size = if let Some(codel_size) = codel_size {
-            if (!Self::check_if_codel_size_is_valid(&pixels, codel_size)) {
+            if !Self::check_if_codel_size_is_valid(&pixels, codel_size) {
                 return Err("incorrect codel size is specified".into());
             }
             codel_size
@@ -155,7 +155,7 @@ impl Image {
                 let p = &m[origin_y][origin_x];
                 for x in 0..codel_size {
                     for y in 0..codel_size {
-                        if (&m[origin_y + y][origin_x + x] != p) {
+                        if &m[origin_y + y][origin_x + x] != p {
                             return false;
                         }
                     }
@@ -173,7 +173,7 @@ impl Image {
             if !((width % codel_size == 0) && (height % codel_size == 0)) {
                 continue;
             }
-            if (Self::check_if_codel_size_is_valid(m, codel_size)) {
+            if Self::check_if_codel_size_is_valid(m, codel_size) {
                 return Some(codel_size);
             }
         }
@@ -185,7 +185,7 @@ impl Image {
         let mut visited = HashSet::new();
         for i in 0..m.len() {
             for j in 0..m[0].len() {
-                if (visited.contains(&(i, j))) {
+                if visited.contains(&(i, j)) {
                     continue;
                 }
                 let visited_local = Self::dfs((i, j), &m[i][j], m);
@@ -209,16 +209,16 @@ impl Image {
 
     fn four_adjacents((i, j): (usize, usize), height: usize, width: usize) -> Vec<(usize, usize)> {
         let mut ret = vec![];
-        if (i != 0) {
+        if i != 0 {
             ret.push((i - 1, j));
         }
-        if (i != height - 1) {
+        if i != height - 1 {
             ret.push((i + 1, j));
         }
-        if (j != 0) {
+        if j != 0 {
             ret.push((i, j - 1));
         }
-        if (j != width - 1) {
+        if j != width - 1 {
             ret.push((i, j + 1));
         }
         ret
@@ -273,10 +273,10 @@ impl Image {
             origin.0 as isize + displacement.0,
             origin.1 as isize + displacement.1,
         );
-        if ((0 <= next.0)
+        if (0 <= next.0)
             && (next.0 < self.height as isize)
             && (0 <= next.1)
-            && (next.1 < self.width as isize))
+            && (next.1 < self.width as isize)
         {
             Some((next.0 as usize, next.1 as usize))
         } else {

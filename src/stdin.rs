@@ -31,11 +31,11 @@ impl Stdin {
     //ref: |https://stackoverflow.com/questions/5012803/test-if-char-string-contains-multibyte-characters|
     //ref: |https://stackoverflow.com/questions/75873135/how-to-convert-utf-8-hex-value-to-char-in-rust|
     fn next(&mut self) -> Option<char> {
-        if (self.is_eof) {
+        if self.is_eof {
             return None;
         }
         let next = self.stdin.as_mut().bytes().next();
-        if (next.is_none()) {
+        if next.is_none() {
             self.is_eof = true;
             return None;
         }
@@ -43,15 +43,15 @@ impl Stdin {
         let c = next.unwrap().unwrap();
 
         //if ASCII
-        if ((c >> 7) == 0b0) {
+        if (c >> 7) == 0b0 {
             return Some(c as char);
         }
 
         //if Unicode
         let mut l = vec![c];
-        let num_byte = if ((c >> 5) == 0b110) {
+        let num_byte = if (c >> 5) == 0b110 {
             2
-        } else if ((c >> 4) == 0b1110) {
+        } else if (c >> 4) == 0b1110 {
             3
         } else {
             assert_eq!(0b11110, c >> 3);
@@ -67,7 +67,7 @@ impl Stdin {
     pub fn read_char(&mut self) -> Option<char> {
         loop {
             let next = self.next()?;
-            if (!next.is_ascii_whitespace()) {
+            if !next.is_ascii_whitespace() {
                 return Some(next);
             }
         }
@@ -81,7 +81,7 @@ impl Stdin {
         //eats the preceding whitespace
         loop {
             let next = self.next()?;
-            if (!next.is_ascii_whitespace()) {
+            if !next.is_ascii_whitespace() {
                 l.push(next);
                 break;
             }
@@ -90,11 +90,11 @@ impl Stdin {
         //reads the contents of a word
         loop {
             let next = self.next();
-            if (next.is_none()) {
+            if next.is_none() {
                 break;
             }
             let next = next.unwrap();
-            if (next.is_ascii_whitespace()) {
+            if next.is_ascii_whitespace() {
                 break;
             }
             l.push(next);

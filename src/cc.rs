@@ -6,7 +6,7 @@ pub enum CC {
 
 impl CC {
     pub fn flip(&self) -> Self {
-        match (self) {
+        match self {
             CC::Left => CC::Right,
             CC::Right => CC::Left,
         }

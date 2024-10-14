@@ -62,7 +62,7 @@ impl Command {
     pub fn apply(&self, ip: &mut Interpreter, value: isize) -> Result<(), Box<dyn Error>> {
         assert!(value > 0);
         let stack = &mut ip.stack;
-        match (self) {
+        match self {
             Command::Push => {
                 stack.push(value);
             }
@@ -70,41 +70,41 @@ impl Command {
                 stack.pop();
             }
             Command::Add => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
                     stack.push(x + y);
                 }
             }
             Command::Subtract => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
                     stack.push(y - x);
                 }
             }
             Command::Multiply => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
                     stack.push(x * y);
                 }
             }
             Command::Divide => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
-                    if (x == 0) {
+                    if x == 0 {
                         return Err(format!("zero-division at {:?}", value).into());
                     }
                     stack.push(y / x);
                 }
             }
             Command::Mod => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
-                    if (x == 0) {
+                    if x == 0 {
                         return Err(format!("zero-division at {:?}", value).into());
                     }
                     #[allow(unstable_name_collisions)]
@@ -112,9 +112,9 @@ impl Command {
                 }
             }
             Command::Not => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     let x = stack.pop().unwrap();
-                    if (x == 0) {
+                    if x == 0 {
                         stack.push(1);
                     } else {
                         stack.push(0);
@@ -122,10 +122,10 @@ impl Command {
                 }
             }
             Command::Greater => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
-                    if (y > x) {
+                    if y > x {
                         stack.push(1);
                     } else {
                         stack.push(0);
@@ -133,43 +133,43 @@ impl Command {
                 }
             }
             Command::Pointer => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     let x = stack.pop().unwrap();
                     ip.dp = ip.dp.rotate_by(x);
                 }
             }
             Command::Switch => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     let x = stack.pop().unwrap();
-                    if (x.abs() % 2 == 1) {
+                    if x.abs() % 2 == 1 {
                         ip.cc = ip.cc.flip();
                     }
                 }
             }
             Command::Duplicate => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     stack.push(*stack.last().unwrap());
                 }
             }
             Command::Roll => {
-                if (stack.len() >= 2) {
+                if stack.len() >= 2 {
                     let num_roll = stack[stack.len() - 1];
                     let depth = stack[stack.len() - 2];
                     //if operation cannoe be done
-                    if ((depth < 0) || (stack.len() - 2 < depth as usize)) {
+                    if (depth < 0) || (stack.len() - 2 < depth as usize) {
                         return Ok(());
                     }
                     for _ in 0..2 {
                         stack.pop().unwrap();
                     }
                     //if operation can be done but virtually nothing happens
-                    if ((depth <= 1) || (num_roll == 0)) {
+                    if (depth <= 1) || (num_roll == 0) {
                         return Ok(());
                     }
 
                     //rotates the indices `[0, 1, 2, ..., depth - 1]`
                     let mut position = VecDeque::from_iter(0..(depth as usize));
-                    if (num_roll > 0) {
+                    if num_roll > 0 {
                         position.rotate_right((num_roll % depth) as usize);
                     } else {
                         position.rotate_left((num_roll.abs() % depth) as usize);
@@ -187,28 +187,28 @@ impl Command {
             }
             Command::ReadNumber => {
                 let n = ip.stdin.read_integer();
-                if (n.is_none()) {
+                if n.is_none() {
                     return Ok(());
                 }
                 stack.push(n.unwrap());
             }
             Command::ReadChar => {
                 let c = ip.stdin.read_char();
-                if (c.is_none()) {
+                if c.is_none() {
                     return Ok(());
                 }
                 stack.push(c.unwrap() as isize);
             }
             Command::WriteNumber => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     let x = stack.pop().unwrap();
                     ip.output(&format!("{}\n", x));
                 }
             }
             Command::WriteChar => {
-                if (!stack.is_empty()) {
+                if !stack.is_empty() {
                     let x = *stack.last().unwrap();
-                    if ((0 <= x) && (x <= char::MAX as isize)) {
+                    if (0 <= x) && (x <= char::MAX as isize) {
                         stack.pop().unwrap();
                         ip.output(&format!("{}", char::from_u32(x as u32).unwrap()));
                     }

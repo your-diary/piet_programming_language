@@ -15,7 +15,7 @@ impl DP {
 
     pub fn rotate_by(&self, i: isize) -> Self {
         let i = (*self as isize) + i;
-        if (i >= 0) {
+        if i >= 0 {
             Self::from_isize(i % 4).unwrap()
         } else {
             Self::from_isize((i % 4 + 4) % 4).unwrap()
@@ -23,7 +23,7 @@ impl DP {
     }
 
     pub fn get_displacement(&self) -> (isize, isize) {
-        match (self) {
+        match self {
             Self::Right => (0, 1),
             Self::Down => (1, 0),
             Self::Left => (0, -1),
@@ -34,7 +34,7 @@ impl DP {
 
 impl FromPrimitive for DP {
     fn from_i64(i: i64) -> Option<Self> {
-        if (i < 0) {
+        if i < 0 {
             None
         } else {
             Self::from_u64(i as u64)
@@ -42,7 +42,7 @@ impl FromPrimitive for DP {
     }
 
     fn from_u64(i: u64) -> Option<Self> {
-        match (i) {
+        match i {
             0 => Some(DP::Right),
             1 => Some(DP::Down),
             2 => Some(DP::Left),
