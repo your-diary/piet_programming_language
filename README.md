@@ -127,7 +127,11 @@ As integration tests, almost all of the samples exhibited in [*Piet Program Gall
 
 Some tests are set `#[ignore]` (i.e. skipped) because they fail. As far as we investigated, we suspect the reason is not because our implementation is incorrect but because some samples are not standard-compliant (anymore). In particular, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec. Our implementation conforms to [*the spec as of 2023/03/29*](https://web.archive.org/web/20230327044126/https://www.dangermouse.net/esoteric/piet.html).
 
-## 5. References
+## 5. Versioning
+
+This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## 6. References
 
 - [*Language Specification*](https://www.dangermouse.net/esoteric/piet.html)
 
