@@ -105,6 +105,12 @@ impl Image {
             _ => return Err("unsupported file format".into()),
         }
 
+        //[spec]
+        //Piet code takes the form of graphics made up of the recognised colours.
+        //Individual pixels of colour are significant in the language,
+        //so it is common for programs to be enlarged for viewing so that the details are easily visible.
+        //In such enlarged programs, the term "codel" is used to mean a block of colour equivalent to a single pixel of code,
+        //to avoid confusion with the actual pixels of the enlarged graphic, of which many may make up one codel.
         let codel_size = if let Some(codel_size) = codel_size {
             if !Self::check_if_codel_size_is_valid(&pixel_map, codel_size) {
                 return Err("incorrect codel size specified".into());
@@ -180,6 +186,12 @@ impl Image {
     /// Splits the graph into blocks (i.e. connected components) by repeating DFS.
     /// `returned_value[i][j]` represents the block to which the codel at `(i, j)` belongs.
     /// As generally multiple pairs of `(i, j)` belong to the same block, we use `Rc`.
+    ///
+    /// Related [spec](https://www.dangermouse.net/esoteric/piet.html):
+    ///
+    /// > A colour block is a contiguous block of any number of codels of one colour, bounded by blocks of other colours or by the edge of the program graphic.
+    /// > Blocks of colour adjacent only diagonally are not considered contiguous.
+    ///
     fn create_block_map(m: &[Vec<Codel>]) -> Vec<Vec<Rc<Block>>> {
         let mut connected_components = vec![];
         let mut visited = FxHashSet::default();

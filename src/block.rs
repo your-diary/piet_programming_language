@@ -4,7 +4,17 @@ use rustc_hash::FxHashSet;
 use super::cc::CC;
 use super::dp::DP;
 
-/// Colour block. In more general terms, a block is a connected component of a graph.
+/**
+Colour block.
+
+In more general terms, a block is a connected component of a graph.
+
+Related [spec](https://www.dangermouse.net/esoteric/piet.html):
+
+> A colour block is a contiguous block of any number of codels of one colour, bounded by blocks of other colours or by the edge of the program graphic.
+> Blocks of colour adjacent only diagonally are not considered contiguous.
+
+*/
 #[derive(Debug, Default, Clone)]
 pub struct Block {
     /**

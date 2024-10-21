@@ -22,7 +22,9 @@ impl Interpreter {
             //spec: The Piet language interpreter begins executing a program in the colour block which includes the upper left codel of the program.
             cur: (0, 0),
 
+            //spec: Piet uses a stack for storage of all data values. Data values exist only as integers
             stack: vec![],
+
             dp: DP::default(),
             cc: CC::default(),
             stdin: Stdin::new(),
