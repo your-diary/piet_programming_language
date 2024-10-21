@@ -5,9 +5,10 @@ use std::{
 
 use itertools::Itertools;
 
+/// Stdin reader which can read a single Unicode character.
 pub struct Stdin {
     is_eof: bool,
-    stdin: Box<dyn Read>,
+    stdin: Box<dyn Read>, //`Box` is for dependency injection.
 }
 
 impl Stdin {
@@ -27,7 +28,8 @@ impl Stdin {
         }
     }
 
-    //reads next Unicode character from `stdin` and returns it as `char` even if that is a whitespace
+    /// Reads next Unicode character from `stdin` and returns it as `char` even if that is a whitespace.
+    /// `None` is returned if EOF.
     //ref: |https://stackoverflow.com/questions/5012803/test-if-char-string-contains-multibyte-characters|
     //ref: |https://stackoverflow.com/questions/75873135/how-to-convert-utf-8-hex-value-to-char-in-rust|
     fn next(&mut self) -> Option<char> {
@@ -49,7 +51,7 @@ impl Stdin {
 
         //if Unicode
         let mut l = vec![c];
-        let num_byte = if (c >> 5) == 0b110 {
+        let num_bytes = if (c >> 5) == 0b110 {
             2
         } else if (c >> 4) == 0b1110 {
             3
@@ -57,13 +59,14 @@ impl Stdin {
             assert_eq!(0b11110, c >> 3);
             4
         };
-        for _ in 0..(num_byte - 1) {
+        for _ in 0..(num_bytes - 1) {
             l.push(self.stdin.as_mut().bytes().next().unwrap().unwrap());
         }
         Some(String::from_utf8(l).unwrap().chars().next().unwrap())
     }
 
-    //reads next non-whitespace character
+    /// Reads next non-whitespace character.
+    /// `None` is returned if EOF.
     pub fn read_char(&mut self) -> Option<char> {
         loop {
             let next = self.next()?;
@@ -73,12 +76,13 @@ impl Stdin {
         }
     }
 
-    //reads next word
-    //"word" is a series of characters and each word is separated by one or more whitespaces.
+    /// Reads next word.
+    /// "word" is a series of characters and each word is separated by one or more whitespaces.
+    /// `None` is returned if EOF.
     fn read_word(&mut self) -> Option<String> {
         let mut l = vec![];
 
-        //eats the preceding whitespace
+        //eats the preceding whitespace (if any) and reads the first character of a word
         loop {
             let next = self.next()?;
             if !next.is_ascii_whitespace() {
@@ -87,7 +91,7 @@ impl Stdin {
             }
         }
 
-        //reads the contents of a word
+        //reads the remaining characters of a word
         loop {
             let next = self.next();
             if next.is_none() {
@@ -103,7 +107,9 @@ impl Stdin {
         Some(l.into_iter().join(""))
     }
 
-    //reads next signed integer
+    /// Reads next signed integer.
+    /// `None` is returned if EOF or parse error because [the spec](https://www.dangermouse.net/esoteric/piet.html) says
+    /// > If an integer read does not receive an integer value, this is an error and the command is ignored.
     pub fn read_integer(&mut self) -> Option<isize> {
         self.read_word()?.parse().ok()
     }
