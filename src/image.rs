@@ -270,6 +270,11 @@ impl Image {
 
     /// Returns the index of the codel when you move straight one step in the direction of `dp`.
     /// `None` is returned iff the next codel is out of bounds.
+    ///
+    /// Related [spec](https://www.dangermouse.net/esoteric/piet.html):
+    ///
+    /// > Sliding across white blocks takes the interpreter in a straight line until it hits a coloured pixel or edge.
+    /// > It does not use the procedure described above for determining where the interpreter emerges from non-white coloured blocks.
     pub fn get_next_codel_index_in_dp_direction(
         &self,
         (i, j): (usize, usize),
