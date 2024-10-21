@@ -68,8 +68,8 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
 
                 let command = Command::new(cur_codel, next_codel);
                 debug_print(args.verbose, &format!("    {:?}", command));
-                let value = img.get_block_size_at(ip.cur) as isize;
-                command.apply(&mut ip, value)?;
+                let block_size = img.get_block_size_at(ip.cur);
+                command.execute(&mut ip, block_size)?;
 
                 ip.cur = next_index.unwrap();
                 break;

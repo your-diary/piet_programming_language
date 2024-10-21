@@ -1,11 +1,11 @@
 use std::collections::VecDeque;
-use std::error::Error;
 
 use num::Integer;
 
 use super::codel::Codel;
 use super::interpreter::Interpreter;
 
+/// Piet Commands (Push, Mod, Roll, etc.)
 #[derive(Debug)]
 pub enum Command {
     Push,
@@ -21,13 +21,28 @@ pub enum Command {
     Switch,
     Duplicate,
     Roll,
-    ReadNumber,
-    ReadChar,
-    WriteNumber,
-    WriteChar,
+    InNumber,
+    InChar,
+    OutNumber,
+    OutChar,
 }
 
 impl Command {
+    /**
+    Creates a new command from two codels before movement and after movement resp.
+
+    [The spec](https://www.dangermouse.net/esoteric/piet.html) says
+
+    > Commands are defined by the transition of colour from one colour block to the next as the interpreter travels through the program.
+    > The number of steps along the Hue Cycle and Lightness Cycle in each transition determine the command executed, as shown in the table at right.
+    > If the transition between colour blocks occurs via a slide across a white block, no command is executed.
+
+    This constructor always returns a valid command to be executed. In other words,
+
+    > If the transition between colour blocks occurs via a slide across a white block, no command is executed.
+
+    above is out of the scope of this function.
+    */
     pub fn new(from: &Codel, to: &Codel) -> Self {
         let hue_difference = Codel::get_hue_difference(from, to);
         let lightness_difference = Codel::get_lightness_difference(from, to);
@@ -49,26 +64,41 @@ impl Command {
 
             (4, 0) => Command::Duplicate,
             (4, 1) => Command::Roll,
-            (4, 2) => Command::ReadNumber,
+            (4, 2) => Command::InNumber,
 
-            (5, 0) => Command::ReadChar,
-            (5, 1) => Command::WriteNumber,
-            (5, 2) => Command::WriteChar,
+            (5, 0) => Command::InChar,
+            (5, 1) => Command::OutNumber,
+            (5, 2) => Command::OutChar,
 
             _ => unreachable!(),
         }
     }
 
-    pub fn apply(&self, ip: &mut Interpreter, value: isize) -> Result<(), Box<dyn Error>> {
-        assert!(value > 0);
+    /**
+    Executes the command represented by `self`.
+
+    `block_size` shall be the size of the block before movement and it is only used in `Push` command. See also [`Block::size`](super::block::Block::size).
+
+    As [the spec](https://www.dangermouse.net/esoteric/piet.html) says,
+
+    >  Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.
+    */
+    pub fn execute(&self, ip: &mut Interpreter, block_size: usize) -> Result<(), &'static str> {
+        assert!(block_size > 0);
+        let block_size = block_size as isize;
         let stack = &mut ip.stack;
         match self {
+            //spec: Pushes the value of the colour block just exited on to the stack.
             Command::Push => {
-                stack.push(value);
+                stack.push(block_size);
             }
+
+            //spec: Pops the top value off the stack and discards it.
             Command::Pop => {
                 stack.pop();
             }
+
+            //spec: Pops the top two values off the stack, adds them, and pushes the result back on the stack.
             Command::Add => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
@@ -76,6 +106,8 @@ impl Command {
                     stack.push(x + y);
                 }
             }
+
+            //spec: Pops the top two values off the stack, calculates the second top value minus the top value, and pushes the result back on the stack.
             Command::Subtract => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
@@ -83,6 +115,8 @@ impl Command {
                     stack.push(y - x);
                 }
             }
+
+            //spec: Pops the top two values off the stack, multiplies them, and pushes the result back on the stack.
             Command::Multiply => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
@@ -90,27 +124,43 @@ impl Command {
                     stack.push(x * y);
                 }
             }
+
+            //[spec]
+            //Pops the top two values off the stack, calculates the integer division of the second top value by the top value,
+            //and pushes the result back on the stack.
+            //If a divide by zero occurs, it is handled as an implementation-dependent error,
+            //though simply ignoring the command is recommended.
             Command::Divide => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
                     if x == 0 {
-                        return Err(format!("zero-division at {:?}", value).into());
+                        return Err("zero-division");
                     }
                     stack.push(y / x);
                 }
             }
+
+            //[spec]
+            //Pops the top two values off the stack, calculates the second top value modulo the top value, and pushes the result back on the stack.
+            //The result has the same sign as the divisor (the top value).
+            //If the top value is zero, this is a divide by zero error, which is handled as an implementation-dependent error,
+            //though simply ignoring the command is recommended. (See note below.)
+            // (snip)
+            //The mod command is thus identical to floored division
             Command::Mod => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
                     if x == 0 {
-                        return Err(format!("zero-division at {:?}", value).into());
+                        return Err("zero-division");
                     }
                     #[allow(unstable_name_collisions)]
                     stack.push(y - (y.div_floor(&x) * x)); //Python-style mod
                 }
             }
+
+            //spec: Replaces the top value of the stack with 0 if it is non-zero, and 1 if it is zero.
             Command::Not => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
@@ -121,6 +171,8 @@ impl Command {
                     }
                 }
             }
+
+            //spec: Pops the top two values off the stack, and pushes 1 on to the stack if the second top value is greater than the top value, and pushes 0 if it is not greater.
             Command::Greater => {
                 if stack.len() >= 2 {
                     let x = stack.pop().unwrap();
@@ -132,12 +184,16 @@ impl Command {
                     }
                 }
             }
+
+            //spec: Pops the top value off the stack and rotates the DP clockwise that many steps (anticlockwise if negative).
             Command::Pointer => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
                     ip.dp = ip.dp.rotate_by(x);
                 }
             }
+
+            //spec: Pops the top value off the stack and toggles the CC that many times (the absolute value of that many times if negative).
             Command::Switch => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
@@ -146,66 +202,92 @@ impl Command {
                     }
                 }
             }
+
+            //spec: Pushes a copy of the top value on the stack on to the stack.
             Command::Duplicate => {
                 if !stack.is_empty() {
                     stack.push(*stack.last().unwrap());
                 }
             }
+
+            //visualization: https://github.com/your-diary/piet_programming_language/blob/master/readme_assets/spec.png
+            //
+            //[spec]
+            //Pops the top two values off the stack and "rolls" the remaining stack entries to a depth equal to the second value popped,
+            //by a number of rolls equal to the first value popped.
+            //A single roll to depth n is defined as burying the top value on the stack n deep and bringing all values above it up by 1 place.
+            //A negative number of rolls rolls in the opposite direction.
+            //A negative depth is an error and the command is ignored.
+            //If a roll is greater than an implementation-dependent maximum stack depth,
+            //it is handled as an implementation-dependent error, though simply ignoring the command is recommended.
             Command::Roll => {
-                if stack.len() >= 2 {
-                    let num_roll = stack[stack.len() - 1];
-                    let depth = stack[stack.len() - 2];
-                    //if operation cannoe be done
-                    if (depth < 0) || (stack.len() - 2 < depth as usize) {
-                        return Ok(());
-                    }
-                    for _ in 0..2 {
-                        stack.pop().unwrap();
-                    }
-                    //if operation can be done but virtually nothing happens
-                    if (depth <= 1) || (num_roll == 0) {
-                        return Ok(());
-                    }
-
-                    //rotates the indices `[0, 1, 2, ..., depth - 1]`
-                    let mut position = VecDeque::from_iter(0..(depth as usize));
-                    if num_roll > 0 {
-                        position.rotate_right((num_roll % depth) as usize);
-                    } else {
-                        position.rotate_left((num_roll.abs() % depth) as usize);
-                    }
-
-                    //pops and re-pushes elements according to the rotated indices
-                    let mut backup = VecDeque::with_capacity(depth as usize);
-                    for _ in (0..depth).rev() {
-                        backup.push_front(stack.pop().unwrap());
-                    }
-                    for i in 0..(depth as usize) {
-                        stack.push(backup[position[i]]);
-                    }
-                }
-            }
-            Command::ReadNumber => {
-                let n = ip.stdin.read_integer();
-                if n.is_none() {
+                if stack.len() < 2 {
                     return Ok(());
                 }
-                stack.push(n.unwrap());
-            }
-            Command::ReadChar => {
-                let c = ip.stdin.read_char();
-                if c.is_none() {
+
+                let num_roll = stack[stack.len() - 1];
+                let depth = stack[stack.len() - 2];
+                if (depth < 0) || (stack.len() - 2 < depth as usize) {
                     return Ok(());
                 }
-                stack.push(c.unwrap() as isize);
+                for _ in 0..2 {
+                    stack.pop().unwrap();
+                }
+                //if operation can be done but virtually nothing happens
+                if (depth <= 1) || (num_roll == 0) {
+                    return Ok(());
+                }
+
+                let mut buf = VecDeque::with_capacity(depth as usize);
+                for _ in 0..depth {
+                    buf.push_front(stack.pop().unwrap());
+                }
+                if num_roll > 0 {
+                    buf.rotate_right((num_roll % depth) as usize);
+                } else {
+                    buf.rotate_left((num_roll.abs() % depth) as usize);
+                }
+                for e in buf {
+                    stack.push(e);
+                }
             }
-            Command::WriteNumber => {
+
+            //[spec]
+            //Reads a value from STDIN as either a number or character,
+            //depending on the particular incarnation of this command and pushes it on to the stack.
+            //If no input is waiting on STDIN, this is an error and the command is ignored.
+            //If an integer read does not receive an integer value, this is an error and the command is ignored.
+            Command::InNumber => {
+                if let Some(n) = ip.stdin.read_integer() {
+                    stack.push(n);
+                }
+            }
+
+            //[spec]
+            //Reads a value from STDIN as either a number or character,
+            //depending on the particular incarnation of this command and pushes it on to the stack.
+            //If no input is waiting on STDIN, this is an error and the command is ignored.
+            //If an integer read does not receive an integer value, this is an error and the command is ignored.
+            Command::InChar => {
+                if let Some(c) = ip.stdin.read_char() {
+                    stack.push(c as isize);
+                }
+            }
+
+            //[spec]
+            //Pops the top value off the stack and prints it to STDOUT as either a number or character,
+            //depending on the particular incarnation of this command.
+            Command::OutNumber => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
                     ip.output(&format!("{}\n", x));
                 }
             }
-            Command::WriteChar => {
+
+            //[spec]
+            //Pops the top value off the stack and prints it to STDOUT as either a number or character,
+            //depending on the particular incarnation of this command.
+            Command::OutChar => {
                 if !stack.is_empty() {
                     let x = *stack.last().unwrap();
                     if (0 <= x) && (x <= char::MAX as isize) {
@@ -215,6 +297,7 @@ impl Command {
                 }
             }
         }
+
         Ok(())
     }
 }
@@ -232,7 +315,7 @@ mod tests {
         let command = Command::Push;
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.apply(&mut ip, 3).is_ok());
+        assert!(command.execute(&mut ip, 3).is_ok());
         assert_eq!(vec![1, 2, 3], ip.stack);
     }
 
@@ -241,12 +324,12 @@ mod tests {
         let command = Command::Pop;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(ip.stack, vec![1]);
     }
 
@@ -255,17 +338,17 @@ mod tests {
         let command = Command::Add;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![3], ip.stack);
     }
 
@@ -274,17 +357,17 @@ mod tests {
         let command = Command::Subtract;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-1], ip.stack);
     }
 
@@ -293,17 +376,17 @@ mod tests {
         let command = Command::Multiply;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![6], ip.stack);
     }
 
@@ -312,22 +395,22 @@ mod tests {
         let command = Command::Divide;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![7, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 7, 0];
-        assert!(command.apply(&mut ip, 1).is_err());
+        assert!(command.execute(&mut ip, 1).is_err());
         assert_eq!(vec![2], ip.stack);
     }
 
@@ -336,42 +419,42 @@ mod tests {
         let command = Command::Mod;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![5, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-5, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-5, -3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 7, 0];
-        assert!(command.apply(&mut ip, 1).is_err());
+        assert!(command.execute(&mut ip, 1).is_err());
         assert_eq!(vec![2], ip.stack);
     }
 
@@ -380,22 +463,22 @@ mod tests {
         let command = Command::Not;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![0], ip.stack);
     }
 
@@ -404,27 +487,27 @@ mod tests {
         let command = Command::Greater;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![0], ip.stack);
     }
 
@@ -433,24 +516,24 @@ mod tests {
         let command = Command::Pointer;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(DP::Right, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Right, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Left, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Up, ip.dp);
     }
@@ -460,36 +543,36 @@ mod tests {
         let command = Command::Switch;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
     }
@@ -499,12 +582,12 @@ mod tests {
         let command = Command::Duplicate;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![1, 1], ip.stack);
     }
 
@@ -516,31 +599,31 @@ mod tests {
         //negative depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, -2, 5];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, -2, 5], ip.stack);
 
         //zero depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 0, 5];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
 
         //one depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 1, 5];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
 
         //depth is too large
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 8, 5];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, 8, 5], ip.stack);
 
         //zero number of rotations
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 4, 0];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
     }
 
@@ -551,28 +634,28 @@ mod tests {
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 4];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
 
         //expects the complexity is independent of `num_roll`
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 4 * 10isize.pow(8) + 1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
     }
 
@@ -583,103 +666,103 @@ mod tests {
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -2];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -3];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -4];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
 
         //expects the complexity is independent of `num_roll`
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -4 * 10isize.pow(8) - 1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
     }
 
     #[test]
     fn test_read_number() {
-        let command = Command::ReadNumber;
+        let command = Command::InNumber;
         let mut ip = Interpreter::new_with_stdin(" -100 abc 🍄🌷 100 ");
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![-100, 100], ip.stack);
 
         for _ in 0..2 {
-            assert!(command.apply(&mut ip, 1).is_ok());
+            assert!(command.execute(&mut ip, 1).is_ok());
             assert_eq!(vec![-100, 100], ip.stack);
-            assert!(command.apply(&mut ip, 1).is_ok());
+            assert!(command.execute(&mut ip, 1).is_ok());
             assert_eq!(vec![-100, 100], ip.stack);
         }
     }
 
     #[test]
     fn test_read_char() {
-        let command = Command::ReadChar;
+        let command = Command::InChar;
         let mut ip = Interpreter::new_with_stdin(" -1 a 🌷🍄 a🍄 🍄a ");
 
         let f = |v: Vec<char>| -> Vec<isize> { v.into_iter().map(|c| c as isize).collect_vec() };
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1', 'a']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1', 'a', '🌷']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄']), ip.stack);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(
             f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄']),
             ip.stack
         );
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(
             f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
             ip.stack
         );
 
         for _ in 0..2 {
-            assert!(command.apply(&mut ip, 1).is_ok());
+            assert!(command.execute(&mut ip, 1).is_ok());
             assert_eq!(
                 f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
                 ip.stack
             );
-            assert!(command.apply(&mut ip, 1).is_ok());
+            assert!(command.execute(&mut ip, 1).is_ok());
             assert_eq!(
                 f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
                 ip.stack
@@ -689,50 +772,50 @@ mod tests {
 
     #[test]
     fn test_write_number() {
-        let command = Command::WriteNumber;
+        let command = Command::OutNumber;
 
         let mut ip = Interpreter::new_with_stdin("");
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new_with_stdin("");
         ip.stack = vec![1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!("1\n".as_bytes(), &ip.output_buf);
 
         let mut ip = Interpreter::new_with_stdin("");
         ip.stack = vec![-1];
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
         assert_eq!("-1\n".as_bytes(), &ip.output_buf);
     }
 
     #[test]
     fn test_write_char() {
-        let command = Command::WriteChar;
+        let command = Command::OutChar;
 
         let mut ip = Interpreter::new();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![char::MAX as isize + 1, -1, 'a' as isize, '🍄' as isize];
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![char::MAX as isize + 1, -1, 'a' as isize], ip.stack);
         assert_eq!("🍄".as_bytes(), &ip.output_buf);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
 
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
 
         ip.stack.pop().unwrap();
-        assert!(command.apply(&mut ip, 1).is_ok());
+        assert!(command.execute(&mut ip, 1).is_ok());
         assert_eq!(vec![char::MAX as isize + 1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
     }
