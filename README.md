@@ -50,6 +50,9 @@ Arguments:
 
 Options:
   -c, --codel-size <CODEL_SIZE>  Specifies the codel size (default: auto detect)
+      --fall-back-to-white       Treats unknown color as white instead of error
+      --fall-back-to-black       Treats unknown color as black instead of error
+      --max-iter <MAX_ITER>      Terminates the program after this number of iterations
   -v, --verbose                  Enables debug output (path trace etc.)
   -h, --help                     Print help
   -V, --version                  Print version
@@ -65,7 +68,9 @@ In this section, we explain how such behaviors are implemented.
 
 > *Additional colours (such as orange, brown) may be used, though their effect is implementation-dependent. In the simplest case, non-standard colours are treated by the language interpreter as the same as white, so may be used freely wherever white is used. (Another possibility is that they are treated the same as black.)*
 
-Our implementation marks any unknown color as an error, immediately terminating the interpreter before your program starts.
+By default, our implementation marks any unknown color as an error, immediately terminating the interpreter before your program starts.
+
+You can change this behavior by specifying `--fall-back-to-white` or `--fall-back-to-black` option. The former treats unknown colors as white, and the latter treats them as black.
 
 ### 3.2 Codels
 

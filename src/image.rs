@@ -72,7 +72,11 @@ impl Display for Image {
 }
 
 impl Image {
-    pub fn new(file: impl AsRef<Path>, codel_size: Option<usize>) -> Result<Self, Box<dyn Error>> {
+    pub fn new(
+        file: impl AsRef<Path>,
+        codel_size: Option<usize>,
+        default_color: Option<Codel>,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut pixel_map = vec![];
         if !file.as_ref().exists() {
             return Err("file not found".into());
@@ -126,7 +130,9 @@ impl Image {
         for i in 0..height {
             for j in 0..width {
                 let pixel = pixel_map[i * codel_size][j * codel_size];
-                let codel = Codel::new(&pixel).ok_or(format!("invalid color at ({}, {})", i, j))?;
+                let codel = Codel::new(&pixel)
+                    .or(default_color)
+                    .ok_or(format!("invalid color at ({}, {})", i, j))?;
                 m[i].push(codel);
             }
         }

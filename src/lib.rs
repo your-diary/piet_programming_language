@@ -10,6 +10,7 @@ pub mod stdin;
 
 use std::error::Error;
 
+use codel::Codel;
 use rustc_hash::FxHashSet;
 
 use crate::args::Args;
@@ -27,7 +28,14 @@ fn debug_print(is_verbose_mode: bool, s: &str) {
 /// Runs a Piet program.
 //This functions is tested in integration tests.
 pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
-    let img = Image::new(&args.image_file, args.codel_size)?;
+    let default_color = if args.fall_back_to_white {
+        Some(Codel::White)
+    } else if args.fall_back_to_black {
+        Some(Codel::Black)
+    } else {
+        None
+    };
+    let img = Image::new(&args.image_file, args.codel_size, default_color)?;
     debug_print(args.verbose, &format!("{}", img));
 
     if img.get_codel_at((0, 0)).is_black() {
