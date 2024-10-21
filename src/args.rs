@@ -15,13 +15,3 @@ pub struct Args {
     #[arg(short, long)]
     pub verbose: bool,
 }
-
-impl Args {
-    pub fn new(image_file: &str, verbose: bool) -> Self {
-        Self {
-            image_file: image_file.to_owned(),
-            codel_size: None,
-            verbose,
-        }
-    }
-}
