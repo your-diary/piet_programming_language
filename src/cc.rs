@@ -1,3 +1,4 @@
+/// Codel Chooser (CC)
 #[derive(Debug, PartialEq)]
 pub enum CC {
     Left,
@@ -5,6 +6,7 @@ pub enum CC {
 }
 
 impl CC {
+    /// Returns the flipped direction.
     pub fn flip(&self) -> Self {
         match self {
             CC::Left => CC::Right,
