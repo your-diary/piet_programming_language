@@ -36,10 +36,17 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
 
     let mut ip = Interpreter::new();
 
+    let mut num_iter = 0;
     loop {
         let cur_codel = img.get_codel_at(ip.cur);
         assert!(!cur_codel.is_black());
         if !cur_codel.is_white() {
+            if num_iter == args.max_iter.unwrap_or(usize::MAX) {
+                println!("Program terminated by `max-iter`.");
+                return Ok(());
+            }
+            num_iter += 1;
+
             debug_print(args.verbose, &ip.to_string());
 
             let iter_max = 8; //changes `dp` and `cc` at most 7 times
@@ -99,6 +106,12 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
             //FIXME: Currently, the average number of iterations needed to find a non-white codel or wall is the size of the current white block.
             //       Ideally it should be O(1) (like `Block::get_corner_index()`).
             loop {
+                if num_iter == args.max_iter.unwrap_or(usize::MAX) {
+                    println!("Program terminated by `max-iter`.");
+                    return Ok(());
+                }
+                num_iter += 1;
+
                 debug_print(args.verbose, &ip.to_string());
 
                 if visited.contains(&(ip.cur, ip.dp)) {
