@@ -11,3 +11,5 @@ Dockerfile
 *.html
 
 TODO.md
+
+*.sh
