@@ -602,6 +602,12 @@ mod tests {
     fn test_roll_01() {
         let command = Command::Roll;
 
+        //the length of stack is insufficient
+        let mut ip = Interpreter::new();
+        ip.stack = vec![9];
+        command.execute(&mut ip, 1);
+        assert_eq!(vec![9], ip.stack);
+
         //negative depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, -2, 5];

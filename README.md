@@ -142,7 +142,7 @@ Some important implementation details:
 
 ### 4.1 Unit Tests
 
-Many unit tests are written.
+Many unit tests are written. The coverage is around 80%.
 
 ### 4.2 Integration Tests
 

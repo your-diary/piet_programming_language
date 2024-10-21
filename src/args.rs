@@ -40,3 +40,33 @@ impl Args {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    // #[ignore]
+    fn test01() {
+        let mut args = Args {
+            image_file: String::new(),
+            codel_size: None,
+            fall_back_to_white: false,
+            fall_back_to_black: false,
+            max_iter: None,
+            verbose: false,
+        };
+        assert!(args.validate().is_ok());
+
+        args.fall_back_to_white = true;
+        assert!(args.validate().is_ok());
+
+        args.fall_back_to_white = false;
+        args.fall_back_to_black = true;
+        assert!(args.validate().is_ok());
+
+        args.fall_back_to_white = true;
+        args.fall_back_to_black = true;
+        assert!(args.validate().is_err());
+    }
+}

@@ -153,3 +153,22 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    // #[ignore]
+    fn test01() {
+        let args = Args {
+            image_file: "./test_images/coverage.png".to_string(),
+            codel_size: None,
+            fall_back_to_white: true,
+            fall_back_to_black: false,
+            max_iter: None,
+            verbose: false,
+        };
+        assert!(run(&args).is_ok());
+    }
+}

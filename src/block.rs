@@ -117,7 +117,9 @@ mod tests {
         ];
         let s = FxHashSet::from_iter(l);
         let block = Block::new(&s);
+
         assert_eq!(block.size, 19);
+
         assert_eq!(block.right_left, (1, 5));
         assert_eq!(block.right_right, (3, 5));
         assert_eq!(block.down_left, (4, 3));
@@ -126,5 +128,14 @@ mod tests {
         assert_eq!(block.left_right, (1, 0));
         assert_eq!(block.up_left, (0, 1));
         assert_eq!(block.up_right, (0, 3));
+
+        assert_eq!((1, 5), block.get_corner_index(&DP::Right, &CC::Left));
+        assert_eq!((3, 5), block.get_corner_index(&DP::Right, &CC::Right));
+        assert_eq!((4, 3), block.get_corner_index(&DP::Down, &CC::Left));
+        assert_eq!((4, 1), block.get_corner_index(&DP::Down, &CC::Right));
+        assert_eq!((3, 0), block.get_corner_index(&DP::Left, &CC::Left));
+        assert_eq!((1, 0), block.get_corner_index(&DP::Left, &CC::Right));
+        assert_eq!((0, 1), block.get_corner_index(&DP::Up, &CC::Left));
+        assert_eq!((0, 3), block.get_corner_index(&DP::Up, &CC::Right));
     }
 }

@@ -154,7 +154,7 @@ mod tests {
         assert_eq!(Some('あ'), stdin.read_char());
         assert_eq!(Some('a'), stdin.read_char());
         assert_eq!(Some('a'), stdin.read_char());
-        assert_eq!(Some('あ'), stdin.read_char());
+        assert_eq!(Some("あ".to_owned()), stdin.read_word());
         assert_eq!(None, stdin.read_char());
         assert_eq!(None, stdin.read_word());
     }
