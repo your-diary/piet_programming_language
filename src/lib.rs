@@ -30,7 +30,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
 
     loop {
         debug_print(args.verbose, &format!("{:?}", ip.cur));
-        let cur_codel = img.get_codel(ip.cur);
+        let cur_codel = img.get_codel_at(ip.cur);
         assert!(!cur_codel.is_black());
         if !cur_codel.is_white() {
             let iter_max = 7; //changes `dp` or `cc` at most 7 times
@@ -48,7 +48,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     }
                     continue;
                 }
-                let next_codel = img.get_codel(next_index.unwrap());
+                let next_codel = img.get_codel_at(next_index.unwrap());
                 if next_codel.is_black() {
                     if i % 2 == 0 {
                         ip.cc = ip.cc.flip();
@@ -68,7 +68,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
 
                 let command = Command::new(cur_codel, next_codel);
                 debug_print(args.verbose, &format!("    {:?}", command));
-                let value = img.get_number(ip.cur);
+                let value = img.get_block_size_at(ip.cur) as isize;
                 command.apply(&mut ip, value)?;
 
                 ip.cur = next_index.unwrap();
@@ -77,19 +77,19 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
         } else {
             let mut visited = HashSet::new();
             loop {
-                let cur_codel = img.get_codel(ip.cur);
+                let cur_codel = img.get_codel_at(ip.cur);
                 if visited.contains(&(cur_codel, ip.dp)) {
                     return Ok(());
                 }
                 visited.insert((cur_codel, ip.dp));
 
-                let next_index = img.get_next_codel_index_white(ip.cur, &ip.dp);
+                let next_index = img.get_next_codel_index_in_dp_direction(ip.cur, &ip.dp);
                 if next_index.is_none() {
                     ip.cc = ip.cc.flip();
                     ip.dp = ip.dp.next();
                     continue;
                 }
-                let next_codel = img.get_codel(next_index.unwrap());
+                let next_codel = img.get_codel_at(next_index.unwrap());
                 if next_codel.is_black() {
                     ip.cc = ip.cc.flip();
                     ip.dp = ip.dp.next();

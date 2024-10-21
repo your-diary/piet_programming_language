@@ -1,14 +1,26 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
+use rustc_hash::FxHashSet;
 
 use super::cc::CC;
 use super::dp::DP;
 
+/// Colour block. In more general terms, a block is a connected component of a graph.
 #[derive(Debug, Default, Clone)]
 pub struct Block {
-    pub num_codel: isize,
+    /**
+    Number of codels in the block.
 
+    This is used as an integer literal as [the spec](https://www.dangermouse.net/esoteric/piet.html) says
+
+    > Each non-black, non-white colour block in a Piet program represents an integer equal to the number of codels in that block.
+    > Note that non-positive integers cannot be represented, although they can be constructed with operators.
+    > When the interpreter encounters a number, it does not necessarily do anything with it.
+    > In particular, it is not automatically pushed on to the stack - there is an explicit command for that (see below).
+    */
+    pub size: usize,
+
+    //indices of the 8 corners
+    //The naming convention is `<dp>_<cc>` (see `DP` struct and `CC` struct).
     right_left: (usize, usize),
     right_right: (usize, usize),
     down_left: (usize, usize),
@@ -20,13 +32,14 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn new(s: &HashSet<(usize, usize)>) -> Self {
+    /// Creates a new block from the list of the codels in the same connected component.
+    pub fn new(s: &FxHashSet<(usize, usize)>) -> Self {
         let i_min = s.iter().min_by_key(|(i, _)| i).unwrap().0;
         let i_max = s.iter().max_by_key(|(i, _)| i).unwrap().0;
         let j_min = s.iter().min_by_key(|(_, j)| j).unwrap().1;
         let j_max = s.iter().max_by_key(|(_, j)| j).unwrap().1;
         Self {
-            num_codel: s.len() as isize,
+            size: s.len(),
             #[rustfmt::skip]
             right_left: *s.iter().filter(|(_, j)| *j == j_max).sorted().next().unwrap(),
             #[rustfmt::skip]
@@ -46,7 +59,7 @@ impl Block {
         }
     }
 
-    pub fn get_corner(&self, dp: &DP, cc: &CC) -> (usize, usize) {
+    pub fn get_corner_index(&self, dp: &DP, cc: &CC) -> (usize, usize) {
         match (dp, cc) {
             (DP::Right, CC::Left) => self.right_left,
             (DP::Right, CC::Right) => self.right_right,
@@ -92,9 +105,9 @@ mod tests {
             (4, 1),
             (4, 3),
         ];
-        let s = HashSet::from_iter(l);
+        let s = FxHashSet::from_iter(l);
         let block = Block::new(&s);
-        assert_eq!(block.num_codel, 19);
+        assert_eq!(block.size, 19);
         assert_eq!(block.right_left, (1, 5));
         assert_eq!(block.right_right, (3, 5));
         assert_eq!(block.down_left, (4, 3));
