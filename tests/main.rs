@@ -1,7 +1,7 @@
 //IMPORTANT NOTES:
 // In this integration test, almost all of the samples exhibited in |https://www.dangermouse.net/esoteric/piet/samples.html| are tested.
 // Some tests are set `ignored` because they result in infinite loops.
-// As far as we investigated, we suspect the reason is not because out implementation is wrong but because some samples are not standard-compliant (anymore).
+// As far as we investigated, we suspect the reason is not because out implementation is incorrect but because some samples are not standard-compliant (anymore).
 // Especially, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec.
 
 mod integration_tests {
