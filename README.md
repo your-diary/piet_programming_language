@@ -133,7 +133,29 @@ As integration tests, almost all of the samples exhibited in [*Piet Program Gall
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 6. References
+## 6. Development
+
+### 6.1 Testing
+
+```bash
+$ cargo build --release #This is required as the integration tests use release binary.
+$ cargo test
+```
+
+### 6.2 Coverage
+
+```bash
+$ cargo tarpaulin --out html
+```
+
+### 6.3 Documentation
+
+```bash
+$ cargo doc --open
+$ cargo doc && fd | entr cargo doc
+```
+
+## 7. References
 
 - [*Language Specification*](https://www.dangermouse.net/esoteric/piet.html)
 
