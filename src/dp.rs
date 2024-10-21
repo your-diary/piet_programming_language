@@ -10,11 +10,11 @@ pub enum DP {
 }
 
 impl DP {
-    pub fn next(&self) -> Self {
-        self.rotate_by(1)
+    pub fn turn_right(&self) -> Self {
+        self.rotate_clockwise_by(1)
     }
 
-    pub fn rotate_by(&self, i: isize) -> Self {
+    pub fn rotate_clockwise_by(&self, i: isize) -> Self {
         let i = (*self as isize) + i;
         if i >= 0 {
             Self::from_isize(i % 4).unwrap()
@@ -23,6 +23,7 @@ impl DP {
         }
     }
 
+    /// Returns the index displacement when you go straight one step in the direction of DP.
     pub fn get_displacement(&self) -> (isize, isize) {
         match self {
             Self::Right => (0, 1),
@@ -59,33 +60,33 @@ mod tests {
 
     #[test]
     fn test01() {
-        assert_eq!(DP::Right.next(), DP::Down);
-        assert_eq!(DP::Down.next(), DP::Left);
-        assert_eq!(DP::Left.next(), DP::Up);
-        assert_eq!(DP::Up.next(), DP::Right);
+        assert_eq!(DP::Right.turn_right(), DP::Down);
+        assert_eq!(DP::Down.turn_right(), DP::Left);
+        assert_eq!(DP::Left.turn_right(), DP::Up);
+        assert_eq!(DP::Up.turn_right(), DP::Right);
     }
 
     #[test]
     fn test02() {
-        assert_eq!(DP::Right.rotate_by(0), DP::Right);
+        assert_eq!(DP::Right.rotate_clockwise_by(0), DP::Right);
 
-        assert_eq!(DP::Right.rotate_by(1), DP::Down);
-        assert_eq!(DP::Right.rotate_by(2), DP::Left);
-        assert_eq!(DP::Right.rotate_by(3), DP::Up);
-        assert_eq!(DP::Right.rotate_by(4), DP::Right);
-        assert_eq!(DP::Right.rotate_by(5), DP::Down);
-        assert_eq!(DP::Right.rotate_by(6), DP::Left);
-        assert_eq!(DP::Right.rotate_by(7), DP::Up);
-        assert_eq!(DP::Right.rotate_by(8), DP::Right);
+        assert_eq!(DP::Right.rotate_clockwise_by(1), DP::Down);
+        assert_eq!(DP::Right.rotate_clockwise_by(2), DP::Left);
+        assert_eq!(DP::Right.rotate_clockwise_by(3), DP::Up);
+        assert_eq!(DP::Right.rotate_clockwise_by(4), DP::Right);
+        assert_eq!(DP::Right.rotate_clockwise_by(5), DP::Down);
+        assert_eq!(DP::Right.rotate_clockwise_by(6), DP::Left);
+        assert_eq!(DP::Right.rotate_clockwise_by(7), DP::Up);
+        assert_eq!(DP::Right.rotate_clockwise_by(8), DP::Right);
 
-        assert_eq!(DP::Right.rotate_by(-1), DP::Up);
-        assert_eq!(DP::Right.rotate_by(-2), DP::Left);
-        assert_eq!(DP::Right.rotate_by(-3), DP::Down);
-        assert_eq!(DP::Right.rotate_by(-4), DP::Right);
-        assert_eq!(DP::Right.rotate_by(-5), DP::Up);
-        assert_eq!(DP::Right.rotate_by(-6), DP::Left);
-        assert_eq!(DP::Right.rotate_by(-7), DP::Down);
-        assert_eq!(DP::Right.rotate_by(-8), DP::Right);
+        assert_eq!(DP::Right.rotate_clockwise_by(-1), DP::Up);
+        assert_eq!(DP::Right.rotate_clockwise_by(-2), DP::Left);
+        assert_eq!(DP::Right.rotate_clockwise_by(-3), DP::Down);
+        assert_eq!(DP::Right.rotate_clockwise_by(-4), DP::Right);
+        assert_eq!(DP::Right.rotate_clockwise_by(-5), DP::Up);
+        assert_eq!(DP::Right.rotate_clockwise_by(-6), DP::Left);
+        assert_eq!(DP::Right.rotate_clockwise_by(-7), DP::Down);
+        assert_eq!(DP::Right.rotate_clockwise_by(-8), DP::Right);
     }
 
     #[test]

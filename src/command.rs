@@ -189,7 +189,7 @@ impl Command {
             Command::Pointer => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
-                    ip.dp = ip.dp.rotate_by(x);
+                    ip.dp = ip.dp.rotate_clockwise_by(x);
                 }
             }
 

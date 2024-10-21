@@ -41,7 +41,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     if i % 2 == 0 {
                         ip.cc = ip.cc.flip();
                     } else {
-                        ip.dp = ip.dp.next();
+                        ip.dp = ip.dp.turn_right();
                     }
                     if i == iter_max {
                         return Ok(());
@@ -53,7 +53,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     if i % 2 == 0 {
                         ip.cc = ip.cc.flip();
                     } else {
-                        ip.dp = ip.dp.next();
+                        ip.dp = ip.dp.turn_right();
                     }
                     if i == iter_max {
                         return Ok(());
@@ -86,13 +86,13 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                 let next_index = img.get_next_codel_index_in_dp_direction(ip.cur, &ip.dp);
                 if next_index.is_none() {
                     ip.cc = ip.cc.flip();
-                    ip.dp = ip.dp.next();
+                    ip.dp = ip.dp.turn_right();
                     continue;
                 }
                 let next_codel = img.get_codel_at(next_index.unwrap());
                 if next_codel.is_black() {
                     ip.cc = ip.cc.flip();
-                    ip.dp = ip.dp.next();
+                    ip.dp = ip.dp.turn_right();
                     continue;
                 }
                 ip.cur = next_index.unwrap();
