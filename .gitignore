@@ -3,3 +3,6 @@
 *.pdf
 test_images/
 Dockerfile
+*.png
+*.jpg
+*.gif
