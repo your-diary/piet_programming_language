@@ -6,3 +6,7 @@ Dockerfile
 *.png
 *.jpg
 *.gif
+
+#coverage report
+*.html
+
