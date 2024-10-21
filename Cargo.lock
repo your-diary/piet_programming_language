@@ -706,6 +706,7 @@ dependencies = [
  "image",
  "itertools 0.13.0",
  "num",
+ "rustc-hash",
 ]
 
 [[package]]
@@ -895,6 +896,12 @@ checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
 dependencies = [
  "bytemuck",
 ]
+
+[[package]]
+name = "rustc-hash"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "583034fd73374156e66797ed8e5b0d5690409c9226b22d87cb7f19821c05d152"
 
 [[package]]
 name = "scopeguard"
