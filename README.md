@@ -123,9 +123,11 @@ Many unit tests are written.
 
 ### 4.2 Integration Tests
 
-As integration tests, almost all of the samples exhibited in [*Piet Program Gallery*](https://www.dangermouse.net/esoteric/piet/samples.html) are tested.
+As integration tests, almost all of the samples exhibited in [*Piet Program Gallery*](https://www.dangermouse.net/esoteric/piet/samples.html) are tested with some caveats:
 
-Some tests are set `#[ignore]` (i.e. skipped) because they fail. As far as we investigated, we suspect the reason is not because our implementation is incorrect but because some samples are not standard-compliant (anymore). In particular, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec. Our implementation conforms to [*the spec as of 2023/03/29*](https://web.archive.org/web/20230327044126/https://www.dangermouse.net/esoteric/piet.html).
+- While Rust codes for the tests are included in this repository, the tested images are NOT included for copyright reasons.
+
+- Some tests are set `#[ignore]` (i.e. skipped) because they fail. As far as we investigated, we suspect the reason is not because our implementation is incorrect but because some samples are not standard-compliant (anymore). In particular, how white blocks shall be handled was not clarified in the first version of the spec, and it was afterwards clarified as seen in the latest spec. Our implementation conforms to [*the spec as of 2024/10/20*](https://web.archive.org/web/20241001133536/https://www.dangermouse.net/esoteric/piet.html).
 
 ## 5. Versioning
 
