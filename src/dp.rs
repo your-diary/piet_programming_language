@@ -1,5 +1,6 @@
 use num::FromPrimitive;
 
+/// Direction Pointer (DP)
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub enum DP {
     Right,
