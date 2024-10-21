@@ -37,10 +37,11 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
     let mut ip = Interpreter::new();
 
     loop {
-        debug_print(args.verbose, &format!("{:?}", ip.cur));
         let cur_codel = img.get_codel_at(ip.cur);
         assert!(!cur_codel.is_black());
         if !cur_codel.is_white() {
+            debug_print(args.verbose, &format!("{:?}", ip.cur));
+
             let iter_max = 8; //changes `dp` and `cc` at most 7 times
             for i in 0..iter_max {
                 //[spec]
@@ -94,12 +95,14 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
             //See `White Blocks` section in the spec: https://www.dangermouse.net/esoteric/piet.html
 
             let mut visited = FxHashSet::default();
+
+            //FIXME: Currently, the average number of iterations needed to find a non-white codel or wall is the size of the current white block.
+            //       Ideally it should be O(1) (like `Block::get_corner_index()`).
             loop {
-                let cur_codel = img.get_codel_at(ip.cur);
-                if visited.contains(&(cur_codel, ip.dp)) {
+                if visited.contains(&(ip.cur, ip.dp)) {
                     return Ok(());
                 }
-                visited.insert((cur_codel, ip.dp));
+                visited.insert((ip.cur, ip.dp));
 
                 let next_index = img.get_next_codel_index_in_dp_direction(ip.cur, &ip.dp);
                 if next_index.is_none() {
@@ -113,7 +116,14 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     ip.dp = ip.dp.turn_right();
                     continue;
                 }
+
+                debug_print(args.verbose, &format!("{:?}", ip.cur));
+
                 ip.cur = next_index.unwrap();
+
+                if next_codel.is_white() {
+                    continue;
+                }
 
                 //spec: If the transition between colour blocks occurs via a slide across a white block, no command is executed.
 

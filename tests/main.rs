@@ -606,4 +606,26 @@ mod integration_tests {
         assert!(res.stdout.is_empty());
         assert!(res.stderr.contains("the top-left codel shall not be black"));
     }
+
+    #[test]
+    fn test38() {
+        let res = run("./test_images/original___issue_02.png", None);
+        if !res.success() {
+            println!("{}", res.stderr);
+        }
+        assert!(res.success());
+        assert!(res.stdout.is_empty());
+        assert!(res.stderr.is_empty());
+    }
+
+    #[test]
+    fn test39() {
+        let res = run("./test_images/original___issue_02_related.png", None);
+        if !res.success() {
+            println!("{}", res.stderr);
+        }
+        assert!(res.success());
+        assert_eq!("!", res.stdout);
+        assert!(res.stderr.is_empty());
+    }
 }
