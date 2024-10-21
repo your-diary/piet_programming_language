@@ -595,4 +595,15 @@ mod integration_tests {
         assert!(res.stderr.is_empty());
         assert_eq!("I Love You Laura", res.stdout);
     }
+
+    #[test]
+    fn test37() {
+        let res = run("./test_images/original___start_point_is_black.png", None);
+        if !res.success() {
+            println!("{}", res.stderr);
+        }
+        assert!(!res.success());
+        assert!(res.stdout.is_empty());
+        assert!(res.stderr.contains("the top-left codel shall not be black"));
+    }
 }
