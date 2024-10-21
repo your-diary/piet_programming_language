@@ -628,4 +628,113 @@ mod integration_tests {
         assert_eq!("!", res.stdout);
         assert!(res.stderr.is_empty());
     }
+
+    //ref: https://github.com/your-diary/piet_programming_language/issues/1#issuecomment-2407660388
+    #[test]
+    fn test40() {
+        //ref: https://github.com/JanEricNitschke/TicTacToe/blob/main/tictactoe_piet/input1.txt
+        let stdin = "0\n1\n2\n3\n4\n5\n6\n";
+
+        let expected_stdout = r#"
+---
+---
+---
+Input:
+X--
+---
+---
+Input:
+XO-
+---
+---
+Input:
+XOX
+---
+---
+Input:
+XOX
+O--
+---
+Input:
+XOX
+OX-
+---
+Input:
+XOX
+OXO
+---
+Input:
+Win for X!
+XOX
+OXO
+X--
+"#;
+
+        let res = run("./test_images/tictactoe.png", Some(stdin));
+        if !res.success() {
+            println!("{}", res.stderr);
+        }
+        assert!(res.success());
+        assert_eq!(expected_stdout.trim_start(), res.stdout);
+        assert!(res.stderr.is_empty());
+    }
+
+    //ref: https://github.com/your-diary/piet_programming_language/issues/1#issuecomment-2407660388
+    //similar to `test40()` but with a different input
+    #[test]
+    fn test41() {
+        //ref: https://github.com/JanEricNitschke/TicTacToe/blob/main/tictactoe_piet/input2.txt
+        let stdin = "0\n4\n8\n1\n7\n6\n2\n5\n3\n";
+
+        let expected_stdout = r#"
+---
+---
+---
+Input:
+X--
+---
+---
+Input:
+X--
+-O-
+---
+Input:
+X--
+-O-
+--X
+Input:
+XO-
+-O-
+--X
+Input:
+XO-
+-O-
+-XX
+Input:
+XO-
+-O-
+OXX
+Input:
+XOX
+-O-
+OXX
+Input:
+XOX
+-OO
+OXX
+Input:
+Draw
+XOX
+XOO
+OXX
+"#;
+
+        let res = run("./test_images/tictactoe.png", Some(stdin));
+        if !res.success() {
+            println!("{}", res.stderr);
+        }
+        assert!(res.success());
+        assert_eq!(expected_stdout.trim_start(), res.stdout);
+        assert!(res.stderr.is_empty());
+    }
 }
