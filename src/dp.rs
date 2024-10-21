@@ -1,8 +1,16 @@
 use num::FromPrimitive;
 
-/// Direction Pointer (DP)
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
+/**
+Direction Pointer (DP)
+
+The default value is `DP::Right` as [the spec](https://www.dangermouse.net/esoteric/piet.html) says
+
+> The interpreter maintains a Direction Pointer (DP), initially pointing to the right.
+
+*/
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub enum DP {
+    #[default]
     Right,
     Down,
     Left,

@@ -1,6 +1,14 @@
-/// Codel Chooser (CC)
-#[derive(Debug, PartialEq)]
+/**
+Codel Chooser (CC)
+
+The default value is `CC::Left` as [the spec](https://www.dangermouse.net/esoteric/piet.html) says
+
+> The interpreter also maintains a Codel Chooser (CC), initially pointing left.
+
+*/
+#[derive(Debug, PartialEq, Default)]
 pub enum CC {
+    #[default]
     Left,
     Right,
 }

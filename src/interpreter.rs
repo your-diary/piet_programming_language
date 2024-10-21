@@ -19,10 +19,12 @@ impl Interpreter {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
+            //spec: The Piet language interpreter begins executing a program in the colour block which includes the upper left codel of the program.
             cur: (0, 0),
+
             stack: vec![],
-            dp: DP::Right,
-            cc: CC::Left,
+            dp: DP::default(),
+            cc: CC::default(),
             stdin: Stdin::new(),
 
             #[cfg(test)]
