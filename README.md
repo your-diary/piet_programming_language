@@ -89,13 +89,13 @@ We use Rust's [`isize`](https://doc.rust-lang.org/std/primitive.isize.html) type
 
 > *If a divide by zero occurs, it is handled as an implementation-dependent error, though simply ignoring the command is recommended.*
 
-Zero-division immediately terminates your program.
+We follow the recommendation.
 
 ### 3.6 `mod` command
 
 > *If the top value is zero, this is a divide by zero error, which is handled as an implementation-dependent error, though simply ignoring the command is recommended.*
 
-Zero-division immediately terminates your program.
+We follow the recommendation.
 
 ### 3.7 `roll` command
 

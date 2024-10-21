@@ -83,7 +83,7 @@ impl Command {
 
     >  Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.
     */
-    pub fn execute(&self, ip: &mut Interpreter, block_size: usize) -> Result<(), &'static str> {
+    pub fn execute(&self, ip: &mut Interpreter, block_size: usize) {
         assert!(block_size > 0);
         let block_size = block_size as isize;
         let stack = &mut ip.stack;
@@ -132,11 +132,11 @@ impl Command {
             //though simply ignoring the command is recommended.
             Command::Divide => {
                 if stack.len() >= 2 {
+                    if *stack.last().unwrap() == 0 {
+                        return; //zero-division
+                    }
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
-                    if x == 0 {
-                        return Err("zero-division");
-                    }
                     stack.push(y / x);
                 }
             }
@@ -150,11 +150,11 @@ impl Command {
             //The mod command is thus identical to floored division
             Command::Mod => {
                 if stack.len() >= 2 {
+                    if *stack.last().unwrap() == 0 {
+                        return; //zero-division
+                    }
                     let x = stack.pop().unwrap();
                     let y = stack.pop().unwrap();
-                    if x == 0 {
-                        return Err("zero-division");
-                    }
                     #[allow(unstable_name_collisions)]
                     stack.push(y - (y.div_floor(&x) * x)); //Python-style mod
                 }
@@ -222,20 +222,20 @@ impl Command {
             //it is handled as an implementation-dependent error, though simply ignoring the command is recommended.
             Command::Roll => {
                 if stack.len() < 2 {
-                    return Ok(());
+                    return;
                 }
 
                 let num_roll = stack[stack.len() - 1];
                 let depth = stack[stack.len() - 2];
                 if (depth < 0) || (stack.len() - 2 < depth as usize) {
-                    return Ok(());
+                    return;
                 }
                 for _ in 0..2 {
                     stack.pop().unwrap();
                 }
                 //if operation can be done but virtually nothing happens
                 if (depth <= 1) || (num_roll == 0) {
-                    return Ok(());
+                    return;
                 }
 
                 let mut buf = VecDeque::with_capacity(depth as usize);
@@ -297,8 +297,6 @@ impl Command {
                 }
             }
         }
-
-        Ok(())
     }
 }
 
@@ -315,7 +313,7 @@ mod tests {
         let command = Command::Push;
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.execute(&mut ip, 3).is_ok());
+        command.execute(&mut ip, 3);
         assert_eq!(vec![1, 2, 3], ip.stack);
     }
 
@@ -324,12 +322,12 @@ mod tests {
         let command = Command::Pop;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(ip.stack, vec![1]);
     }
 
@@ -338,17 +336,17 @@ mod tests {
         let command = Command::Add;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![3], ip.stack);
     }
 
@@ -357,17 +355,17 @@ mod tests {
         let command = Command::Subtract;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-1], ip.stack);
     }
 
@@ -376,17 +374,17 @@ mod tests {
         let command = Command::Multiply;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![6], ip.stack);
     }
 
@@ -395,23 +393,24 @@ mod tests {
         let command = Command::Divide;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![7, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![2], ip.stack);
 
+        //zero-division
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 7, 0];
-        assert!(command.execute(&mut ip, 1).is_err());
-        assert_eq!(vec![2], ip.stack);
+        command.execute(&mut ip, 1);
+        assert_eq!(vec![2, 7, 0], ip.stack);
     }
 
     #[test]
@@ -419,43 +418,44 @@ mod tests {
         let command = Command::Mod;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![5, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-5, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-5, -3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-2], ip.stack);
 
+        //zero-division
         let mut ip = Interpreter::new();
         ip.stack = vec![2, 7, 0];
-        assert!(command.execute(&mut ip, 1).is_err());
-        assert_eq!(vec![2], ip.stack);
+        command.execute(&mut ip, 1);
+        assert_eq!(vec![2, 7, 0], ip.stack);
     }
 
     #[test]
@@ -463,22 +463,22 @@ mod tests {
         let command = Command::Not;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![0], ip.stack);
     }
 
@@ -487,27 +487,27 @@ mod tests {
         let command = Command::Greater;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![0], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1, 2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![0], ip.stack);
     }
 
@@ -516,24 +516,24 @@ mod tests {
         let command = Command::Pointer;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(DP::Right, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Right, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Left, ip.dp);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(DP::Up, ip.dp);
     }
@@ -543,36 +543,36 @@ mod tests {
         let command = Command::Switch;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Left, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![-1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!(CC::Right, ip.cc);
     }
@@ -582,12 +582,12 @@ mod tests {
         let command = Command::Duplicate;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![1, 1], ip.stack);
     }
 
@@ -599,31 +599,31 @@ mod tests {
         //negative depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, -2, 5];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, -2, 5], ip.stack);
 
         //zero depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 0, 5];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
 
         //one depth
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 1, 5];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
 
         //depth is too large
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 8, 5];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4, 8, 5], ip.stack);
 
         //zero number of rotations
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 8, 7, 1, 2, 3, 4, 4, 0];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 8, 7, 1, 2, 3, 4], ip.stack);
     }
 
@@ -634,28 +634,28 @@ mod tests {
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 4];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
 
         //expects the complexity is independent of `num_roll`
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, 4 * 10isize.pow(8) + 1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
     }
 
@@ -666,28 +666,28 @@ mod tests {
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -2];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 3, 4, 1, 2], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -3];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 4, 1, 2, 3], ip.stack);
 
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -4];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 1, 2, 3, 4], ip.stack);
 
         //expects the complexity is independent of `num_roll`
         let mut ip = Interpreter::new();
         ip.stack = vec![9, 1, 2, 3, 4, 4, -4 * 10isize.pow(8) - 1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![9, 2, 3, 4, 1], ip.stack);
     }
 
@@ -696,22 +696,22 @@ mod tests {
         let command = Command::InNumber;
         let mut ip = Interpreter::new_with_stdin(" -100 abc 🍄🌷 100 ");
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-100], ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![-100, 100], ip.stack);
 
         for _ in 0..2 {
-            assert!(command.execute(&mut ip, 1).is_ok());
+            command.execute(&mut ip, 1);
             assert_eq!(vec![-100, 100], ip.stack);
-            assert!(command.execute(&mut ip, 1).is_ok());
+            command.execute(&mut ip, 1);
             assert_eq!(vec![-100, 100], ip.stack);
         }
     }
@@ -723,46 +723,46 @@ mod tests {
 
         let f = |v: Vec<char>| -> Vec<isize> { v.into_iter().map(|c| c as isize).collect_vec() };
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1', 'a']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1', 'a', '🌷']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄']), ip.stack);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(
             f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄']),
             ip.stack
         );
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(
             f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
             ip.stack
         );
 
         for _ in 0..2 {
-            assert!(command.execute(&mut ip, 1).is_ok());
+            command.execute(&mut ip, 1);
             assert_eq!(
                 f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
                 ip.stack
             );
-            assert!(command.execute(&mut ip, 1).is_ok());
+            command.execute(&mut ip, 1);
             assert_eq!(
                 f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
                 ip.stack
@@ -775,18 +775,18 @@ mod tests {
         let command = Command::OutNumber;
 
         let mut ip = Interpreter::new_with_stdin("");
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new_with_stdin("");
         ip.stack = vec![1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!("1\n".as_bytes(), &ip.output_buf);
 
         let mut ip = Interpreter::new_with_stdin("");
         ip.stack = vec![-1];
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
         assert_eq!("-1\n".as_bytes(), &ip.output_buf);
     }
@@ -796,26 +796,26 @@ mod tests {
         let command = Command::OutChar;
 
         let mut ip = Interpreter::new();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
 
         let mut ip = Interpreter::new();
         ip.stack = vec![char::MAX as isize + 1, -1, 'a' as isize, '🍄' as isize];
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![char::MAX as isize + 1, -1, 'a' as isize], ip.stack);
         assert_eq!("🍄".as_bytes(), &ip.output_buf);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
 
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![char::MAX as isize + 1, -1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
 
         ip.stack.pop().unwrap();
-        assert!(command.execute(&mut ip, 1).is_ok());
+        command.execute(&mut ip, 1);
         assert_eq!(vec![char::MAX as isize + 1], ip.stack);
         assert_eq!("🍄a".as_bytes(), &ip.output_buf);
     }
