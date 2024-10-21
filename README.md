@@ -77,7 +77,7 @@ The codel size is automatically detected or can be specified via `--codel-size` 
 
 > *The stack is notionally infinitely deep, but implementations may elect to provide a finite maximum stack size. If a finite stack overflows, it should be treated as a runtime error, and handling this will be implementation dependent.*
 
-Our implementation doesn't explicitly set the limit of a stack size. The actual size depends on your computer. What happens when a stack overflows is *undefined*.
+Our implementation uses Rust's [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) type as a stack and doesn't explicitly set the limit for its size. The actual limit depends on your computer (e.g. RAM size). What happens when a stack overflows is *undefined*.
 
 ### 3.4 Integers
 
@@ -107,13 +107,31 @@ Practically, when the depth (i.e. the second top entry of a stack) is larger tha
 
 > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
 
-By the way, the complexity of `roll` command only depends on the depth (i.e. `O(depth)`). Even if the number of rolls (i.e. the top entry of a stack) is large, the command runs quickly. The similar applies to `pointer` command and `switch` command, both of which take `O(1)`.
-
 ### 3.8 `out(char)` command
 
 When the top entry of a stack exceeds the range `[0, char::MAX]` (i.e. when it isn't a valid Unicode character), the command is simply ignored according to
 
 > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
+
+### 3.9 Commands
+
+Some important implementation details:
+
+- The complexity of `roll` command only depends on the depth (i.e. `O(depth)`). Even if the number of rolls (i.e. the top entry of a stack) is large, the command runs quickly. The similar applies to `pointer` command and `switch` command, both of which take `O(1)`.
+
+- All of the commands are implemented as atomic operations; when a command is ignored according to
+
+    > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
+
+    , the stack is kept intact.
+
+    Examples:
+
+    - When `divide` command tries to pop two entries from the stack but the size of the stack is one, no entry is popped.
+
+    - When the top entry of the stack is `0`, `divide` command is ignored as zero-division and no entry is popped.
+
+    One exception is that `in` command consumes stdin even if the read value was invalid (e.g. invalid string for `in(number)` command).
 
 ## 4. Tests
 
