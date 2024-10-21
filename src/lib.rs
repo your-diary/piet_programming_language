@@ -8,23 +8,31 @@ pub mod image;
 pub mod interpreter;
 pub mod stdin;
 
-use std::collections::HashSet;
 use std::error::Error;
+
+use rustc_hash::FxHashSet;
 
 use crate::args::Args;
 use crate::command::Command;
 use crate::image::Image;
 use crate::interpreter::Interpreter;
 
+/// Prints the given string to stderr if `is_verbose_mode` is `true`.
 fn debug_print(is_verbose_mode: bool, s: &str) {
     if is_verbose_mode {
         eprintln!("{}", s);
     }
 }
 
+/// Runs a Piet program.
+//This functions is tested in integration tests.
 pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
     let img = Image::new(&args.image_file, args.codel_size)?;
     debug_print(args.verbose, &format!("{}", img));
+
+    if img.get_codel_at((0, 0)).is_black() {
+        return Err("the top-left codel shall not be black".into());
+    }
 
     let mut ip = Interpreter::new();
 
@@ -33,17 +41,25 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
         let cur_codel = img.get_codel_at(ip.cur);
         assert!(!cur_codel.is_black());
         if !cur_codel.is_white() {
-            let iter_max = 7; //changes `dp` or `cc` at most 7 times
-            for i in 0..=iter_max {
+            let iter_max = 8; //changes `dp` and `cc` at most 7 times
+            for i in 0..iter_max {
+                //[spec]
+                // Black colour blocks and the edges of the program restrict program flow.
+                // If the Piet interpreter attempts to move into a black block or off an edge,
+                // it is stopped and the CC is toggled.
+                // The interpreter then attempts to move from its current block again.
+                // If it fails a second time, the DP is moved clockwise one step.
+                // These attempts are repeated, with the CC and DP being changed between alternate attempts.
+                // If after eight attempts the interpreter cannot leave its current colour block,
+                // there is no way out and the program terminates.
                 let next_index = img.get_next_codel_index(ip.cur, &ip.dp, &ip.cc);
-                // debug_print(args.verbose, &format!("  {:?}", next_index));
                 if next_index.is_none() {
                     if i % 2 == 0 {
                         ip.cc = ip.cc.flip();
                     } else {
                         ip.dp = ip.dp.turn_right();
                     }
-                    if i == iter_max {
+                    if i == iter_max - 1 {
                         return Ok(());
                     }
                     continue;
@@ -55,7 +71,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     } else {
                         ip.dp = ip.dp.turn_right();
                     }
-                    if i == iter_max {
+                    if i == iter_max - 1 {
                         return Ok(());
                     }
                     continue;
@@ -75,7 +91,9 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                 break;
             }
         } else {
-            let mut visited = HashSet::new();
+            //See `White Blocks` section in the spec: https://www.dangermouse.net/esoteric/piet.html
+
+            let mut visited = FxHashSet::default();
             loop {
                 let cur_codel = img.get_codel_at(ip.cur);
                 if visited.contains(&(cur_codel, ip.dp)) {
@@ -96,6 +114,9 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     continue;
                 }
                 ip.cur = next_index.unwrap();
+
+                //spec: If the transition between colour blocks occurs via a slide across a white block, no command is executed.
+
                 break;
             }
         }
