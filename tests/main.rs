@@ -131,11 +131,15 @@ mod integration_tests {
         assert_eq!("Hello world!", res.stdout);
     }
 
-    //`ignore` because non-standard colors are used.
+    //`ignore` because this results in an infinite loop.
     #[test]
     #[ignore]
     fn test04() {
-        let res = run("./test_images/fancy_hello_world.png", None, None);
+        let res = run(
+            "./test_images/fancy_hello_world.png",
+            None,
+            Some(vec!["--fall-back-to-white".to_string()]),
+        );
         if !res.success() {
             println!("{}", res.stderr);
         }
@@ -144,11 +148,15 @@ mod integration_tests {
         assert_eq!("Hello world!", res.stdout);
     }
 
-    //`ignore` because non-standard colors are used.
+    //`ignore` because this results in an infinite loop.
     #[test]
     #[ignore]
     fn test05() {
-        let res = run("./test_images/prime_number_test.png", Some("1"), None);
+        let res = run(
+            "./test_images/prime_number_test.png",
+            Some("1"),
+            Some(vec!["--fall-back-to-white".to_string()]),
+        );
         if !res.success() {
             println!("{}", res.stderr);
         }
@@ -227,11 +235,15 @@ mod integration_tests {
         assert_eq!("abcdefghijklmnopqrstuvwxyz", res.stdout);
     }
 
-    //`ignore` because non-standard colors are used.
+    //`ignore` because this results in an infinite loop.
     #[test]
     #[ignore]
     fn test12() {
-        let res = run("./test_images/prime_number_generator.png", None, None);
+        let res = run(
+            "./test_images/prime_number_generator.png",
+            None,
+            Some(vec!["--fall-back-to-white".to_string()]),
+        );
         if !res.success() {
             println!("{}", res.stderr);
         }
@@ -317,11 +329,14 @@ mod integration_tests {
         assert_eq!("81\n", res.stdout);
     }
 
-    //`ignore` because non-standard colors are used.
+    //`--fall-back-to-white` is required for this test to pass.
     #[test]
-    #[ignore]
     fn test18() {
-        let res = run("./test_images/factorials.png", Some("0"), None);
+        let res = run(
+            "./test_images/factorials.png",
+            Some("0"),
+            Some(vec!["--fall-back-to-white".to_string()]),
+        );
         if !res.success() {
             println!("{}", res.stderr);
         }
@@ -329,7 +344,11 @@ mod integration_tests {
         assert!(res.stderr.is_empty());
         assert_eq!("1\n", res.stdout);
 
-        let res = run("./test_images/power_function.png", Some("3"), None);
+        let res = run(
+            "./test_images/factorials.png",
+            Some("3"),
+            Some(vec!["--fall-back-to-white".to_string()]),
+        );
         if !res.success() {
             println!("{}", res.stderr);
         }
@@ -587,14 +606,15 @@ mod integration_tests {
         assert_eq!("I Love You Laura", res.stdout);
     }
 
-    //`ignore` because non-standard colors are used.
+    //`ignore` because nothing is printed.
+    //Perhaps the input image is hue-shifted version of some valid Piet program.
     #[test]
     #[ignore]
     fn test36() {
         let res = run(
             "./test_images/more_piet_wall_art_in_cyan_magenta_and_blue.png",
             None,
-            None,
+            Some(vec!["--fall-back-to-white".to_string()]),
         );
         if !res.success() {
             println!("{}", res.stderr);
