@@ -44,6 +44,12 @@ impl Command {
     above is out of the scope of this function.
     */
     pub fn new(from: &Codel, to: &Codel) -> Self {
+        assert_ne!(from, to);
+        assert!(!from.is_white());
+        assert!(!from.is_black());
+        assert!(!to.is_white());
+        assert!(!to.is_black());
+
         let hue_difference = Codel::get_hue_difference(from, to);
         let lightness_difference = Codel::get_lightness_difference(from, to);
         match (hue_difference, lightness_difference) {
