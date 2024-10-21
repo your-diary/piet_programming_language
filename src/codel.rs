@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use super::image::Pixel;
 
+/// Codel (LightRed, Green, White, etc.)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Codel {
     LightRed,     //#FFC0C0
@@ -30,6 +31,7 @@ pub enum Codel {
 }
 
 impl Display for Codel {
+    /// Prints a colored square (full-width space with a background color).
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (r, g, b) = match self {
             Codel::LightRed => (255, 192, 192),
@@ -120,6 +122,7 @@ impl Codel {
         self == &Codel::White
     }
 
+    //ref: https://www.dangermouse.net/esoteric/piet.html
     fn get_hue(&self) -> usize {
         match self {
             Codel::LightRed | Codel::Red | Codel::DarkRed => 0,
@@ -132,6 +135,7 @@ impl Codel {
         }
     }
 
+    //ref: https://www.dangermouse.net/esoteric/piet.html
     fn get_lightness(&self) -> usize {
         match self {
             Codel::LightRed
@@ -159,21 +163,13 @@ impl Codel {
     pub fn get_hue_difference(from: &Codel, to: &Codel) -> usize {
         let from = from.get_hue();
         let to = to.get_hue();
-        if to >= from {
-            to - from
-        } else {
-            to + 6 - from
-        }
+        (to + 6 - from) % 6
     }
 
     pub fn get_lightness_difference(from: &Codel, to: &Codel) -> usize {
         let from = from.get_lightness();
         let to = to.get_lightness();
-        if to >= from {
-            to - from
-        } else {
-            to + 3 - from
-        }
+        (to + 3 - from) % 3
     }
 }
 
