@@ -1,3 +1,4 @@
+use std::fmt::{self, Display, Formatter};
 use std::io::{self, Write};
 
 use super::cc::CC;
@@ -13,6 +14,19 @@ pub struct Interpreter {
 
     #[cfg(test)]
     pub output_buf: Vec<u8>,
+}
+
+impl Display for Interpreter {
+    //The implementation is a bit dirty but see https://github.com/rust-lang/rust/issues/55584 .
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{:12} DP:{:5} CC:{:?}",
+            format!("{:?}", self.cur),
+            format!("{:?}", self.dp),
+            self.cc
+        )
+    }
 }
 
 impl Interpreter {

@@ -40,7 +40,7 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
         let cur_codel = img.get_codel_at(ip.cur);
         assert!(!cur_codel.is_black());
         if !cur_codel.is_white() {
-            debug_print(args.verbose, &format!("{:?}", ip.cur));
+            debug_print(args.verbose, &ip.to_string());
 
             let iter_max = 8; //changes `dp` and `cc` at most 7 times
             for i in 0..iter_max {
@@ -99,6 +99,8 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
             //FIXME: Currently, the average number of iterations needed to find a non-white codel or wall is the size of the current white block.
             //       Ideally it should be O(1) (like `Block::get_corner_index()`).
             loop {
+                debug_print(args.verbose, &ip.to_string());
+
                 if visited.contains(&(ip.cur, ip.dp)) {
                     return Ok(());
                 }
@@ -116,8 +118,6 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
                     ip.dp = ip.dp.turn_right();
                     continue;
                 }
-
-                debug_print(args.verbose, &format!("{:?}", ip.cur));
 
                 ip.cur = next_index.unwrap();
 
