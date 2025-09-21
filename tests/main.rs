@@ -62,7 +62,7 @@ mod integration_tests {
                     stdout: String::new(),
                     stderr: e.to_string(),
                     exit_status: 1,
-                }
+                };
             }
         };
 
