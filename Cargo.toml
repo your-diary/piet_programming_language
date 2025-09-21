@@ -6,8 +6,8 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.5.20", features = ["derive"] }
-image = "0.25.2"
-itertools = "0.13.0"
+clap = { version = "4.5.48", features = ["derive"] }
+image = "0.25.8"
+itertools = "0.14.0"
 num = "0.4.3"
-rustc-hash = "2.0.0"
+rustc-hash = "2.1.1"
