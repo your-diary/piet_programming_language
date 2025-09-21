@@ -1,6 +1,6 @@
 use std::{
     collections::VecDeque,
-    io::{self, Read},
+    io::{self, BufRead, BufReader, Read},
 };
 
 use itertools::Itertools;
@@ -8,7 +8,7 @@ use itertools::Itertools;
 /// Stdin reader which can read a single Unicode character.
 pub struct Stdin {
     is_eof: bool,
-    stdin: Box<dyn Read>, //`Box` is for dependency injection.
+    stdin: Box<dyn BufRead>, //`Box` is for dependency injection.
 }
 
 impl Stdin {
@@ -16,7 +16,7 @@ impl Stdin {
     pub fn new() -> Self {
         Self {
             is_eof: false,
-            stdin: Box::new(io::stdin()),
+            stdin: Box::new(BufReader::new(io::stdin())),
         }
     }
 

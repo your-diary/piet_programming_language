@@ -150,7 +150,7 @@ impl Image {
     fn check_if_codel_size_is_valid(pixel_map: &[Vec<Pixel>], codel_size: usize) -> bool {
         let height = pixel_map.len();
         let width = pixel_map[0].len();
-        if (height % codel_size != 0) || (width % codel_size != 0) {
+        if !height.is_multiple_of(codel_size) || !width.is_multiple_of(codel_size) {
             return false;
         }
         let h = height / codel_size;
@@ -179,7 +179,7 @@ impl Image {
         let width = pixel_map[0].len();
         //tries all of the common divisors of `height` and `width` in descending order
         for codel_size in (1..=(height.min(width))).rev() {
-            if !((width % codel_size == 0) && (height % codel_size == 0)) {
+            if !(width.is_multiple_of(codel_size) && height.is_multiple_of(codel_size)) {
                 continue;
             }
             if Self::check_if_codel_size_is_valid(pixel_map, codel_size) {
