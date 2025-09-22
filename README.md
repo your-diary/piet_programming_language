@@ -14,7 +14,7 @@ Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoter
 
 ### 2.1 Installation
 
-MSRV(Minimum Supported Rust Version): [Rust 1.81.0](https://www.rust-lang.org/tools/install)
+MSRV(Minimum Supported Rust Version): [Rust 1.87.0](https://www.rust-lang.org/tools/install)
 
 #### From GitHub
 
