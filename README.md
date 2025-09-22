@@ -2,7 +2,7 @@
 
 ## 1. About
 
-Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoteric/piet.html), which is fully in Rust.
+Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoteric/piet.html), which is fully written in Rust.
 
 > *Piet is a programming language in which programs look like abstract paintings. The language is named after Piet Mondrian, who pioneered the field of geometric abstract art.*
 
