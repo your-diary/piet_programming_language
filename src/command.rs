@@ -286,7 +286,7 @@ impl Command {
             Command::OutNumber => {
                 if !stack.is_empty() {
                     let x = stack.pop().unwrap();
-                    ip.output(&format!("{}\n", x));
+                    ip.output(&format!("{}", x));
                 }
             }
 
@@ -794,13 +794,22 @@ mod tests {
         ip.stack = vec![1];
         command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
-        assert_eq!("1\n".as_bytes(), &ip.output_buf);
+        assert_eq!("1".as_bytes(), &ip.output_buf);
 
         let mut ip = Interpreter::new_with_stdin("");
         ip.stack = vec![-1];
         command.execute(&mut ip, 1);
         assert!(ip.stack.is_empty());
-        assert_eq!("-1\n".as_bytes(), &ip.output_buf);
+        assert_eq!("-1".as_bytes(), &ip.output_buf);
+
+        let mut ip = Interpreter::new_with_stdin("");
+        ip.stack = vec![-1, 1];
+        command.execute(&mut ip, 1);
+        assert_eq!(vec![-1], ip.stack);
+        assert_eq!("1".as_bytes(), &ip.output_buf);
+        command.execute(&mut ip, 1);
+        assert!(ip.stack.is_empty());
+        assert_eq!("1-1".as_bytes(), &ip.output_buf);
     }
 
     #[test]
