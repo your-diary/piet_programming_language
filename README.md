@@ -12,7 +12,15 @@ Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoter
 
 ## 2. Usage
 
-### 2.1 Installation
+### 2.1 Run without Installation
+
+```bash
+$ git clone 'https://github.com/your-diary/piet_programming_language'
+$ cd piet_programming_language/
+$ cargo run -- --help
+```
+
+### 2.2 Installation
 
 MSRV(Minimum Supported Rust Version): [Rust 1.87.0](https://www.rust-lang.org/tools/install)
 
@@ -30,13 +38,13 @@ $ cd piet_programming_language/
 $ cargo install --locked --path .
 ```
 
-### 2.2 Run
+### 2.3 Run
 
 ```bash
 $ piet_programming_language <image file>
 ```
 
-### 2.3 Show Help
+### 2.4 Show Help
 
 ```bash
 $ piet_programming_language --help
