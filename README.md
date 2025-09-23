@@ -18,6 +18,7 @@ Interpreter for [*Piet Programming Language*](https://www.dangermouse.net/esoter
 $ git clone 'https://github.com/your-diary/piet_programming_language'
 $ cd piet_programming_language/
 $ cargo run -- --help
+$ cargo run -- <image file>
 ```
 
 Or if you prefer Docker:
