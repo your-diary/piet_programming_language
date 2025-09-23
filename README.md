@@ -208,7 +208,7 @@ $ cargo test
 ### 6.2 Coverage
 
 ```bash
-$ cargo tarpaulin --out html
+$ cargo llvm-cov --open
 ```
 
 ### 6.3 Documentation
