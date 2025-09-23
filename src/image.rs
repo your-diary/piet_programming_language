@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fmt::{self, Display},
-    path::Path,
+    io::{BufRead, Seek},
     rc::Rc,
 };
 
@@ -72,16 +72,13 @@ impl Display for Image {
 }
 
 impl Image {
-    pub fn new(
-        file: impl AsRef<Path>,
+    pub fn new<R: BufRead + Seek>(
+        reader: R,
         codel_size: Option<usize>,
         default_color: Option<Codel>,
     ) -> Result<Self, Box<dyn Error>> {
         let mut pixel_map = vec![];
-        if !file.as_ref().exists() {
-            return Err("file not found".into());
-        }
-        match ImageReader::open(file)?.decode()? {
+        match ImageReader::new(reader).with_guessed_format()?.decode()? {
             DynamicImage::ImageRgb8(img) => {
                 let height = img.height();
                 let width = img.width();

@@ -9,8 +9,13 @@ pub mod interpreter;
 pub mod stdin;
 
 use std::error::Error;
+use std::fs;
+use std::io::{BufReader, Cursor};
 
+use base64::Engine;
+use base64::prelude::{BASE64_STANDARD, BASE64_STANDARD_NO_PAD};
 use codel::Codel;
+use itertools::Itertools;
 use rustc_hash::FxHashSet;
 
 use crate::args::Args;
@@ -35,7 +40,21 @@ pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
     } else {
         None
     };
-    let img = Image::new(&args.image_file, args.codel_size, default_color)?;
+
+    let image_content: Vec<u8> = if args.base64 {
+        let base64_encoded_image = args.image_file.split_whitespace().join(""); //`split_whitespace()` removes the wrapping newlines of GNU `base64` command.
+        if base64_encoded_image.len().is_multiple_of(4) {
+            BASE64_STANDARD.decode(&base64_encoded_image)?
+        } else {
+            BASE64_STANDARD_NO_PAD.decode(&base64_encoded_image)?
+        }
+    } else {
+        fs::read(&args.image_file)?
+    };
+
+    let reader = BufReader::new(Cursor::new(image_content));
+
+    let img = Image::new(reader, args.codel_size, default_color)?;
     debug_print(args.verbose, &format!("{}", img));
 
     if img.get_codel_at((0, 0)).is_black() {
@@ -167,6 +186,7 @@ mod tests {
             fall_back_to_white: true,
             fall_back_to_black: false,
             max_iter: None,
+            base64: false,
             verbose: false,
         };
         assert!(run(&args).is_ok());

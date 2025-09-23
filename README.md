@@ -58,9 +58,10 @@ Arguments:
 
 Options:
   -c, --codel-size <CODEL_SIZE>  Specifies the codel size (default: auto detect)
-      --fall-back-to-white       Treats unknown color as white instead of error
-      --fall-back-to-black       Treats unknown color as black instead of error
+      --fall-back-to-white       Treats unknown colors as white instead of error
+      --fall-back-to-black       Treats unknown colors as black instead of error
       --max-iter <MAX_ITER>      Terminates the program after this number of iterations
+      --base64                   Interprets <IMAGE_FILE> as a base64-encoded image instead of a file path
   -v, --verbose                  Enables debug output (path trace etc.)
   -h, --help                     Print help
   -V, --version                  Print version

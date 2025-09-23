@@ -23,6 +23,10 @@ pub struct Args {
     #[arg(long)]
     pub max_iter: Option<usize>,
 
+    /// Interprets <IMAGE_FILE> as a base64-encoded image instead of a file path
+    #[arg(long)]
+    pub base64: bool,
+
     /// Enables debug output (path trace etc.)
     #[arg(short, long)]
     pub verbose: bool,
@@ -54,6 +58,7 @@ mod tests {
             fall_back_to_white: false,
             fall_back_to_black: false,
             max_iter: None,
+            base64: false,
             verbose: false,
         };
         assert!(args.validate().is_ok());
