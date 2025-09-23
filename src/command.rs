@@ -736,47 +736,94 @@ mod tests {
         let f = |v: Vec<char>| -> Vec<isize> { v.into_iter().map(|c| c as isize).collect_vec() };
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-']), ip.stack);
+        assert_eq!(f(vec![' ']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1']), ip.stack);
+        assert_eq!(f(vec![' ', '-']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1', 'a']), ip.stack);
+        assert_eq!(f(vec![' ', '-', '1']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1', 'a', '🌷']), ip.stack);
+        assert_eq!(f(vec![' ', '-', '1', ' ']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄']), ip.stack);
+        assert_eq!(f(vec![' ', '-', '1', ' ', 'a']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a']), ip.stack);
+        assert_eq!(f(vec![' ', '-', '1', ' ', 'a', ' ']), ip.stack);
 
         command.execute(&mut ip, 1);
-        assert_eq!(f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄']), ip.stack);
+        assert_eq!(f(vec![' ', '-', '1', ' ', 'a', ' ', '🌷']), ip.stack);
+
+        command.execute(&mut ip, 1);
+        assert_eq!(f(vec![' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄']), ip.stack);
 
         command.execute(&mut ip, 1);
         assert_eq!(
-            f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄']),
+            f(vec![' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ']),
             ip.stack
         );
 
         command.execute(&mut ip, 1);
         assert_eq!(
-            f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+            f(vec![' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a']),
+            ip.stack
+        );
+
+        command.execute(&mut ip, 1);
+        assert_eq!(
+            f(vec![
+                ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄'
+            ]),
+            ip.stack
+        );
+
+        command.execute(&mut ip, 1);
+        assert_eq!(
+            f(vec![
+                ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' '
+            ]),
+            ip.stack
+        );
+
+        command.execute(&mut ip, 1);
+        assert_eq!(
+            f(vec![
+                ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' ', '🍄'
+            ]),
+            ip.stack
+        );
+
+        command.execute(&mut ip, 1);
+        assert_eq!(
+            f(vec![
+                ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' ', '🍄', 'a'
+            ]),
+            ip.stack
+        );
+
+        command.execute(&mut ip, 1);
+        assert_eq!(
+            f(vec![
+                ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' ', '🍄', 'a', ' '
+            ]),
             ip.stack
         );
 
         for _ in 0..2 {
             command.execute(&mut ip, 1);
             assert_eq!(
-                f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+                f(vec![
+                    ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' ', '🍄', 'a', ' '
+                ]),
                 ip.stack
             );
             command.execute(&mut ip, 1);
             assert_eq!(
-                f(vec!['-', '1', 'a', '🌷', '🍄', 'a', '🍄', '🍄', 'a']),
+                f(vec![
+                    ' ', '-', '1', ' ', 'a', ' ', '🌷', '🍄', ' ', 'a', '🍄', ' ', '🍄', 'a', ' '
+                ]),
                 ip.stack
             );
         }

@@ -120,13 +120,45 @@ Practically, when the depth (i.e. the second top entry of a stack) is larger tha
 
 > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
 
-### 3.8 `out(char)` command
+### 3.8 `in(number)`, `in(char)` command
+
+The spec is vague about how to determine number/character boundaries; it only states:
+
+> Reads a value from STDIN as either a number or character
+
+> Data values exist only as integers, though they may be read in or printed as Unicode character values with appropriate commands.
+
+Practically, we assume that, when users want to input a series of numbers, they would separate them by whitespace (e.g. `1 -2 -3`, `1\n-2\n-3`, etc.) though lining up numbers without whitespace is also theoretically possible (e.g. `123-5-6` may be interpreted as `[123, -5, -6]`, which is [how `std::cin` works in C++](https://wandbox.org/permlink/g1Kw3zdCA6RF3OoP)).
+
+On the other hand, when users want to input a string, they typically do not want to ignore whitespace (e.g. `Hello, world!\n` should be read as is) though skipping whitespace is also theoretically possible (e.g. `a b c` may be interpreted as `['a', 'b', 'c']`, which is [how `std::cin` works in C++](https://wandbox.org/permlink/biiOtNLhCX77cs1x)).
+
+To support both use-cases, we adopt the following implementation:
+
+- `in(char)` literally reads the next Unicode character, including whitespace.
+
+- `in(number)` reads the longest match of the (pseudo) regex `[ \t\n]*<non_blank_word>[ \t]*\n?`, where `<non_blank_word>` is defined as a sequence of non-whitespace characters.
+
+    - The reason that trailing whitespace is also consumed is to let `in(number)` followed by `in(char)` read `100` and `h` respectively from the stdin `100 hello`.
+
+    - The reasons that the consumption stops at the first newline are:
+
+        - Users may want to read integers on one line and then read the next line as it is as a string (including whitespace).
+
+        - If we don't stop at the first newline, then the command would wait indefinitely until it reaches EOF or a non whitespace character, which is especially problematic when the stdin is [canonical](https://stackoverflow.com/questions/358342/canonical-vs-non-canonical-terminal-input).
+
+    For example,
+
+    - if stdin contains `\n\n  123 hello`, then `in(number)` consumes `\n\n  123 ` and leaves `hello`
+
+    - if stdin contains `-5 \n hello`, then `in(number)` consumes `-5 \n` and leaves ` hello`
+
+### 3.9 `out(char)` command
 
 When the top entry of a stack exceeds the range `[0, char::MAX]` (i.e. when it isn't a valid Unicode character), the command is simply ignored according to
 
 > *Any operations which cannot be performed (such as popping values when not enough are on the stack) are simply ignored, and processing continues with the next command.*
 
-### 3.9 Commands
+### 3.10 Commands
 
 Some important implementation details:
 

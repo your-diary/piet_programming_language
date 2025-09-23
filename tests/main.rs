@@ -273,7 +273,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("31405\n\n", res.stdout);
+        assert_eq!("31405\n", res.stdout);
     }
 
     //`ignore` because it doesn't work.
@@ -318,7 +318,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("1\n", res.stdout);
+        assert_eq!("1", res.stdout);
 
         let res = run("./test_images/power_function.png", Some("3 4"), None);
         if !res.success() {
@@ -326,7 +326,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("81\n", res.stdout);
+        assert_eq!("81", res.stdout);
     }
 
     //`--fall-back-to-white` is required for this test to pass.
@@ -342,7 +342,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("1\n", res.stdout);
+        assert_eq!("1", res.stdout);
 
         let res = run(
             "./test_images/factorials.png",
@@ -354,7 +354,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("6\n", res.stdout);
+        assert_eq!("6", res.stdout);
     }
 
     //`ignore` because it seems to work but the output is very long.
@@ -446,7 +446,7 @@ mod integration_tests {
         }
         assert!(res.success());
         assert!(res.stderr.is_empty());
-        assert_eq!("3\n", res.stdout);
+        assert_eq!("3", res.stdout);
     }
 
     //`ignore` because it results in an stack overflow

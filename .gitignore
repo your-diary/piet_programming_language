@@ -13,3 +13,6 @@ Dockerfile
 TODO.md
 
 *.sh
+
+#used for temporal testing while development
+src/bin/
