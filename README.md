@@ -20,6 +20,16 @@ $ cd piet_programming_language/
 $ cargo run -- --help
 ```
 
+Or if you prefer Docker:
+
+```bash
+$ git clone 'https://github.com/your-diary/piet_programming_language'
+$ cd piet_programming_language/
+$ docker build -t piet_programming_language .
+$ docker run --rm piet_programming_language --help
+$ docker run --rm -it piet_programming_language --base64 "$(base64 ./path/to/image.png)"
+```
+
 ### 2.2 Installation
 
 MSRV(Minimum Supported Rust Version): [Rust 1.87.0](https://www.rust-lang.org/tools/install)
